@@ -28,6 +28,7 @@ type sshfsVolume struct {
 
 	Mountpoint  string
 	connections int
+	ID_RSA      string
 }
 
 type sshfsDriver struct {
@@ -90,6 +91,8 @@ func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 			v.Password = val
 		case "port":
 			v.Port = val
+		case "id_rsa":
+			v.ID_RSA = val
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
@@ -128,6 +131,11 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 	if err := os.RemoveAll(v.Mountpoint); err != nil {
 		return logError(err.Error())
 	}
+
+	if err := os.RemoveAll(v.Mountpoint + "_id_rsa"); err != nil {
+		return logError(err.Error())
+	}
+
 	delete(d.volumes, r.Name)
 	d.saveState()
 	return nil
@@ -163,6 +171,17 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(v.Mountpoint, 0755); err != nil {
 				return &volume.MountResponse{}, logError(err.Error())
+			} else {
+				if v.ID_RSA != "" {
+					id_rsa := v.Mountpoint + "_id_rsa"
+					f, err := os.Create(id_rsa)
+					if err != nil {
+						logrus.Error(err)
+					}
+					f.WriteString(v.ID_RSA)
+					f.Chmod(0600)
+					f.Close()
+				}
 			}
 		} else if err != nil {
 			return &volume.MountResponse{}, logError(err.Error())
@@ -239,6 +258,7 @@ func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 
 func (d *sshfsDriver) mountVolume(v *sshfsVolume) error {
 	cmd := exec.Command("sshfs", "-oStrictHostKeyChecking=no", v.Sshcmd, v.Mountpoint)
+
 	if v.Port != "" {
 		cmd.Args = append(cmd.Args, "-p", v.Port)
 	}
@@ -246,7 +266,9 @@ func (d *sshfsDriver) mountVolume(v *sshfsVolume) error {
 		cmd.Args = append(cmd.Args, "-o", "workaround=rename", "-o", "password_stdin")
 		cmd.Stdin = strings.NewReader(v.Password)
 	}
-
+	if v.ID_RSA != "" {
+		cmd.Args = append(cmd.Args, "-o", "IdentityFile=" + v.Mountpoint + "_id_rsa")
+	}
 	for _, option := range v.Options {
 		cmd.Args = append(cmd.Args, "-o", option)
 	}
