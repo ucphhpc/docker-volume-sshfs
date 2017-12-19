@@ -1,6 +1,7 @@
 # Docker volume plugin for sshFS
 
-See vieux/sshfs for original documentation
+See rasmunk/sshfs for original documentation
+
 
 
 Usage
