@@ -67,3 +67,10 @@ sudo docker run --rm -v sshvolume:/write busybox sh -c "echo hello > /write/worl
 sudo docker run --rm -v sshvolume:/read busybox grep -Fxq hello /read/world
 #sudo cat /var/lib/docker/plugins/sshfs-state.json
 sudo docker volume rm sshvolume
+
+# test6: ssh id_rsa flag
+sudo docker volume create -d rasmunk/sshfs:$TAG -o sshcmd=root@localhost:/ -o port=2222 -o id_rsa="$(cat ssh/id_rsa)" sshvolume
+sudo docker run --rm -v sshvolume:/write busybox sh -c "echo hello > /write/world"
+sudo docker run --rm -v sshvolume:/read busybox grep -Fxq hello /read/world
+#sudo cat /var/lib/docker/plugins/sshfs-state.json
+sudo docker volume rm sshvolume
