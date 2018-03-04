@@ -21,6 +21,7 @@ const socketAddress = "/run/docker/plugins/sshfs.sock"
 
 type sshfsVolume struct {
 	Password string
+	IdRsa   string
 	Sshcmd   string
 	Port     string
 
@@ -28,7 +29,6 @@ type sshfsVolume struct {
 
 	Mountpoint  string
 	connections int
-	ID_RSA      string
 }
 
 type sshfsDriver struct {
@@ -92,7 +92,7 @@ func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 		case "port":
 			v.Port = val
 		case "id_rsa":
-			v.ID_RSA = val
+			v.IdRsa = val
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
@@ -172,13 +172,13 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 			if err := os.MkdirAll(v.Mountpoint, 0755); err != nil {
 				return &volume.MountResponse{}, logError(err.Error())
 			} else {
-				if v.ID_RSA != "" {
+				if v.IdRsa != "" {
 					id_rsa := v.Mountpoint + "_id_rsa"
 					f, err := os.Create(id_rsa)
 					if err != nil {
 						logrus.Error(err)
 					}
-					f.WriteString(v.ID_RSA)
+					f.WriteString(v.IdRsa)
 					f.Chmod(0600)
 					f.Close()
 				}
@@ -266,7 +266,7 @@ func (d *sshfsDriver) mountVolume(v *sshfsVolume) error {
 		cmd.Args = append(cmd.Args, "-o", "workaround=rename", "-o", "password_stdin")
 		cmd.Stdin = strings.NewReader(v.Password)
 	}
-	if v.ID_RSA != "" {
+	if v.IdRsa != "" {
 		cmd.Args = append(cmd.Args, "-o", "IdentityFile=" + v.Mountpoint + "_id_rsa")
 	}
 	for _, option := range v.Options {
