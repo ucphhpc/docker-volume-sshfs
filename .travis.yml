@@ -22,3 +22,5 @@
 
   script:
     - ./.travis/$TESTFILE
+  notifications: 
+  slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
