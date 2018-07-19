@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
 )
@@ -24,9 +23,9 @@ type sshfsVolume struct {
 	IDRsa    string
 	Sshcmd   string
 	Port     string
+	AutoRemove bool
 
 	Options []string
-
 	Mountpoint  string
 	connections int
 }
@@ -120,24 +119,9 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 	d.Lock()
 	defer d.Unlock()
 
-	v, ok := d.volumes[r.Name]
-	if !ok {
-		return logError("volume %s not found", r.Name)
+	if err := d.removeVolume(r.Name); err != nil {
+		return err
 	}
-
-	if v.connections != 0 {
-		return logError("volume %s is currently used by a container", r.Name)
-	}
-	if err := os.RemoveAll(v.Mountpoint); err != nil {
-		return logError(err.Error())
-	}
-
-	if err := os.RemoveAll(v.Mountpoint + "_id_rsa"); err != nil {
-		return logError(err.Error())
-	}
-
-	delete(d.volumes, r.Name)
-	d.saveState()
 	return nil
 }
 
@@ -190,8 +174,14 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 			return &volume.MountResponse{}, logError("%v already exist and it's not a directory", v.Mountpoint)
 		}
 
-		if err := d.mountVolume(v); err != nil {
-			return &volume.MountResponse{}, logError(err.Error())
+		// Failed to mount -> remove volume
+		if mErr := d.mountVolume(v); mErr != nil {
+			err := mErr.Error()
+
+			if rErr := d.removeVolume(r.Name); rErr != nil {
+				err = err + rErr.Error()
+			}
+			return &volume.MountResponse{}, logError(err)
 		}
 	}
 
@@ -251,7 +241,6 @@ func (d *sshfsDriver) List() (*volume.ListResponse, error) {
 
 func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 	logrus.WithField("method", "capabilities").Debugf("")
-
 	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "local"}}
 }
 
@@ -273,13 +262,42 @@ func (d *sshfsDriver) mountVolume(v *sshfsVolume) error {
 	}
 
 	logrus.Debug(cmd.Args)
-	return cmd.Run()
+	output,err := cmd.CombinedOutput()
+	if err != nil {
+		return logError("sshfs command execute failed: %s ( %s )", err, string(output))
+	}
+	return nil
 }
 
 func (d *sshfsDriver) unmountVolume(target string) error {
 	cmd := fmt.Sprintf("umount %s", target)
-	logrus.Debug(cmd)
-	return exec.Command("sh", "-c", cmd).Run()
+	if err := exec.Command("sh", "-c", cmd).Run(); err != nil {
+		return logError("Failed to execute unmount: %s", err)
+	}
+	return nil
+}
+
+// Ensure to lock before calling this
+func (d *sshfsDriver) removeVolume(name string) error {
+	v, ok := d.volumes[name]
+	if !ok {
+		return logError("volume %s not found", name)
+	}
+
+	if v.connections != 0 {
+		return logError("volume %s is currently used by a container", name)
+	}
+	if err := os.RemoveAll(v.Mountpoint); err != nil {
+		return logError(err.Error())
+	}
+
+	if err := os.RemoveAll(v.Mountpoint + "_id_rsa"); err != nil {
+		return logError(err.Error())
+	}
+
+	delete(d.volumes, name)
+	d.saveState()
+	return nil
 }
 
 func logError(format string, args ...interface{}) error {
