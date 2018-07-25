@@ -1,5 +1,5 @@
 PLUGIN_NAME = rasmunk/sshfs
-PLUGIN_TAG ?= latest
+PLUGIN_TAG ?= test
 
 all: clean rootfs create
 
