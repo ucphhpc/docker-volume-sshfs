@@ -14,7 +14,13 @@ FROM alpine
 
 RUN apk update && apk add sshfs
 
-RUN mkdir -p /run/docker/plugins /mnt/mounts /mnt/volumes
+RUN mkdir -p /run/docker/plugins /mnt/volumes
 
 COPY --from=builder /go/bin/docker-volume-sshfs .
+
+# Tini to reap orphaned child procceses
+# Add Tini
+RUN apk add --nocache tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
 CMD ["docker-volume-sshfs"]

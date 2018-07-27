@@ -14,17 +14,19 @@ import (
 
 const (
 	DriverName		= "sshfs"
-	VolumeDirMode	= 0755
+	VolumeDirMode	= 0700
+	VolumeFileMode  = 0600
 )
 
 type sshfsVolume struct {
 	Name		string
 	MountPoint	string
 	CreatedAt	string
-	refCount 	int
+	RefCount 	int
 	// sshfs options
 	Options		[]string
 	SSHCmd		string
+	IDRsa    	string
 	Password	string
 	Port		string
 }
@@ -33,7 +35,6 @@ type sshfsDriver struct {
 	mutex			*sync.Mutex
 	volumes			map[string]*sshfsVolume
 	baseVolumePath	string
-	baseMountPath	string
 }
 
 func (v *sshfsVolume) setupOptions(options map[string]string) error {
@@ -45,6 +46,8 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 			v.Password = val
 		case "port":
 			v.Port = val
+		case "id_rsa":
+			v.IDRsa = val
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
@@ -58,10 +61,35 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 		return fmt.Errorf("'sshcmd' option required")
 	}
 
+	if v.Password == "" && v.IDRsa == "" {
+		return fmt.Errorf("either 'password' or 'id_rsa' option must be set")
+	}
+
+	if v.Password != "" && v.IDRsa != "" {
+		return fmt.Errorf("'password' and 'id_rsa' options are mutually exclusive")
+	}
+
 	return nil
 }
 
-func newSshfsDriver(baseVolumePath string, baseMountPath string) (*sshfsDriver, error) {
+func (v *sshfsVolume) initVolume() error {
+	if v.IDRsa != "" {
+		idRsa := v.MountPoint + "_id_rsa"
+		if f, err := os.Create(idRsa); err != nil {
+			msg := fmt.Sprintf("Failed to create id_rsa file at %s", idRsa)
+			log.Error(msg)
+			return fmt.Errorf(msg)
+		} else {
+			f.WriteString(v.IDRsa)
+			f.Chmod(VolumeFileMode)
+			f.Close()
+		}
+	}
+	return  nil
+}
+
+
+func newSshfsDriver(baseVolumePath string) (*sshfsDriver, error) {
 	log.Info("Creating a new driver instance")
 
 	verr := os.MkdirAll(baseVolumePath, VolumeDirMode)
@@ -69,18 +97,12 @@ func newSshfsDriver(baseVolumePath string, baseMountPath string) (*sshfsDriver, 
 		return nil, verr
 	}
 
-	merr := os.MkdirAll(baseMountPath, VolumeDirMode)
-	if merr != nil {
-		return nil, merr
-	}
-
-	log.Infof("Initialized driver state, volumes='%s' mounts='%s'",
-		baseVolumePath, baseMountPath)
+	log.Infof("Initialized driver state, volumes='%s'",
+		baseVolumePath)
 
 	driver := &sshfsDriver{
 		volumes:		make(map[string]*sshfsVolume),
 		baseVolumePath:	baseVolumePath,
-		baseMountPath:	baseMountPath,
 		mutex:			&sync.Mutex{},
 	}
 	//TODO Check for exisiting volumes
@@ -94,12 +116,16 @@ func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	vol, err := d.initVolume(r.Name)
+	vol, err := d.newVolume(r.Name)
 	if err != nil {
 		return err
 	}
 
 	if err := vol.setupOptions(r.Options); err != nil {
+		return err
+	}
+
+	if err := vol.initVolume(); err != nil {
 		return err
 	}
 
@@ -146,8 +172,8 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 		return fmt.Errorf(msg)
 	}
 
-	if vol.refCount != 0 {
-		msg := fmt.Sprintf("Can't remove volume %s because it is mounted by %i containers", vol.Name, vol.refCount)
+	if vol.RefCount != 0 {
+		msg := fmt.Sprintf("Can't remove volume %s because it is mounted by %i containers", vol.Name, vol.RefCount)
 		log.Error(msg)
 		return fmt.Errorf(msg)
 	}
@@ -185,7 +211,7 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 		return &volume.MountResponse{}, fmt.Errorf(msg)
 	}
 
-	if vol.refCount == 0 {
+	if vol.RefCount == 0 {
 		log.Debugf("First volume reference %s", vol.Name)
 		if merr := d.mountVolume(vol); merr != nil {
 			msg := fmt.Sprintf("Failed to mount %s, %s", vol.Name, merr)
@@ -193,7 +219,7 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 			return &volume.MountResponse{}, fmt.Errorf(msg)
 		}
 	}
-	vol.refCount++
+	vol.RefCount++
 	return &volume.MountResponse{Mountpoint: vol.MountPoint}, nil
 }
 
@@ -209,10 +235,10 @@ func (d *sshfsDriver) Unmount(r *volume.UnmountRequest) error {
 		return fmt.Errorf(msg)
 	}
 
-	vol.refCount--
+	vol.RefCount--
 
-	if vol.refCount == 0 {
-		if err := d.unmountVolume(vol.MountPoint); err != nil {
+	if vol.RefCount == 0 {
+		if err := d.unmountVolume(vol); err != nil {
 			return err
 		}
 	}
@@ -227,7 +253,7 @@ func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 
 // Helper methods
 
-func (d *sshfsDriver) initVolume(name string) (*sshfsVolume, error) {
+func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 	path := filepath.Join(d.baseVolumePath, name)
 
 	merr := os.MkdirAll(path, VolumeDirMode)
@@ -237,24 +263,34 @@ func (d *sshfsDriver) initVolume(name string) (*sshfsVolume, error) {
 		return nil, fmt.Errorf(msg)
 	}
 
-	d.unmountVolume(path)
-
 	vol := &sshfsVolume{
 		Name: name,
 		MountPoint: path,
 		CreatedAt: time.Now().Format(time.RFC3339Nano),
 	}
+	// Ensure mount is not active
+	d.unmountVolume(vol)
 
 	return vol, nil
 }
 
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
+	// Remove id_rsa
+	if vol.IDRsa != "" {
+		if err := os.RemoveAll(vol.MountPoint + "_id_rsa"); err != nil {
+			msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s", vol.Name, vol.MountPoint)
+			log.Error(msg)
+			return fmt.Errorf(msg)
+		}
+	}
+
 	// Remove MountPoint
 	if rerr := os.RemoveAll(vol.MountPoint); rerr != nil {
 		msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s", vol.Name, vol.MountPoint)
 		log.Error(msg)
 		return fmt.Errorf(msg)
 	}
+
 	return nil
 }
 
@@ -270,20 +306,25 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 		cmd.Stdin = strings.NewReader(vol.Password)
 	}
 
+	if vol.IDRsa != "" {
+		cmd.Args = append(cmd.Args, "-o", "IdentityFile=" + vol.MountPoint + "_id_rsa")
+	}
+
 	// Append the rest
 	for _, option := range vol.Options {
 		cmd.Args = append(cmd.Args, "-o", option)
 	}
+
+	// Ensure that children have the same process pgid
 	log.Debugf("Executing mount command %v", cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("sshfs command failed %v (%s)", err, output)
 	}
-
 	return nil
 }
 
-func (d *sshfsDriver) unmountVolume(path string) error {
-	cmd := fmt.Sprintf("umount %s", path)
+func (d *sshfsDriver) unmountVolume(vol *sshfsVolume) error {
+	cmd := fmt.Sprintf("umount %s", vol.MountPoint)
 	return exec.Command("sh", "-c", cmd).Run()
 }

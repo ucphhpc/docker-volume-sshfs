@@ -2,6 +2,7 @@
   "description": "sshFS plugin for Docker",
   "documentation": "https://docs.docker.com/engine/extend/plugins/",
   "entrypoint": [
+    "/sbin/tini", "--",
     "/docker-volume-sshfs"
   ],
   "env": [

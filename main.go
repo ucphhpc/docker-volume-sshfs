@@ -8,12 +8,11 @@ import (
 
 const (
 	DefaultBaseVolumePath = "/mnt/volumes"
-	DefaultBaseMountPath = "/mnt/mounts"
 	DefaultUnixSocket = "/run/docker/plugins/" + DriverName + ".sock"
 )
 
 func main() {
-	driver, err := newSshfsDriver(DefaultBaseVolumePath, DefaultBaseMountPath)
+	driver, err := newSshfsDriver(DefaultBaseVolumePath)
 	if err != nil {
 		log.Errorf("Failed to create the driver %s", err)
 		os.Exit(1)
