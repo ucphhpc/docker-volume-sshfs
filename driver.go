@@ -247,7 +247,7 @@ func (d *sshfsDriver) Unmount(r *volume.UnmountRequest) error {
 
 func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 	log.Debugf("Capabilities Request")
-	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "local"}}
+	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "global"}}
 }
 
 // Helper methods
