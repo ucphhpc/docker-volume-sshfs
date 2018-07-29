@@ -47,6 +47,7 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 		case "port":
 			v.Port = val
 		case "id_rsa":
+			v.IDRsa = val
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
