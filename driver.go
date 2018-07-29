@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	DriverName		= "sshfs"
+	// VolumeDirMode sets the permissions for the volume directory
 	VolumeDirMode	= 0700
+	// VolumeFileMode sets permissions for the volume files
 	VolumeFileMode  = 0600
 )
 
@@ -75,15 +76,15 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 func (v *sshfsVolume) initVolume() error {
 	if v.IDRsa != "" {
 		idRsa := v.MountPoint + "_id_rsa"
-		if f, err := os.Create(idRsa); err != nil {
+		f, err := os.Create(idRsa)
+		if err != nil {
 			msg := fmt.Sprintf("Failed to create id_rsa file at %s (%s)", idRsa, err)
 			log.Error(msg)
 			return fmt.Errorf(msg)
-		} else {
-			f.WriteString(v.IDRsa)
-			f.Chmod(VolumeFileMode)
-			f.Close()
 		}
+		f.WriteString(v.IDRsa)
+		f.Chmod(VolumeFileMode)
+		f.Close()
 	}
 	return  nil
 }
@@ -172,7 +173,7 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 	}
 
 	if vol.RefCount != 0 {
-		msg := fmt.Sprintf("Can't remove volume %s because it is mounted by %i containers", vol.Name, vol.RefCount)
+		msg := fmt.Sprintf("Can't remove volume %s because it is mounted by %d containers", vol.Name, vol.RefCount)
 		log.Error(msg)
 		return fmt.Errorf(msg)
 	}
@@ -190,7 +191,7 @@ func (d *sshfsDriver) Path(r *volume.PathRequest) (*volume.PathResponse, error) 
 
 	vol, ok := d.volumes[r.Name]
 	if !ok {
-		msg := fmt.Sprintf("Failed to find path for volume %s because it doesn't exists %s", r.Name)
+		msg := fmt.Sprintf("Failed to find path for volume %s because it doesn't exists", r.Name)
 		log.Error(msg)
 		return &volume.PathResponse{}, fmt.Errorf(msg)
 	}
@@ -205,7 +206,7 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 
 	vol, ok := d.volumes[r.Name]
 	if !ok {
-		msg := fmt.Sprintf("Failed to mount volume %s because it doesn't exists %s", r.Name)
+		msg := fmt.Sprintf("Failed to mount volume %s because it doesn't exists", r.Name)
 		log.Error(msg)
 		return &volume.MountResponse{}, fmt.Errorf(msg)
 	}

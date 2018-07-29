@@ -7,8 +7,10 @@ import (
 )
 
 const (
+	// DefaultBaseVolumePath defines the bath within the docker plugins rootfs file system
 	DefaultBaseVolumePath = "/mnt/volumes"
-	DefaultUnixSocket = "/run/docker/plugins/" + DriverName + ".sock"
+	// DefaultUnixSocket sets the path to the plugin socket
+	DefaultUnixSocket = "/run/docker/plugins/sshfs.sock"
 )
 
 func main() {
