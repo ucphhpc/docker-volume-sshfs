@@ -33,7 +33,7 @@ before_deploy:
 - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 deploy:
   provider: script
-  script: bash make push
+  script: make push
   on:
     go: 1.x.x
     branch: devel
