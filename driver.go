@@ -9,7 +9,10 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
+	"encoding/json"
 	"strings"
+	"io/ioutil"
+	"strconv"
 )
 
 const (
@@ -20,22 +23,24 @@ const (
 )
 
 type sshfsVolume struct {
-	Name		string
-	MountPoint	string
-	CreatedAt	string
-	RefCount 	int
+	Name			string
+	MountPoint		string
+	CreatedAt		string
+	RefCount 		int
 	// sshfs options
-	Options		[]string
-	SSHCmd		string
-	IDRsa    	string
-	Password	string
-	Port		string
+	Options			[]string
+	SSHCmd			string
+	IdentityFile	string
+	keepKey 		bool
+	Password		string
+	Port			string
 }
 
 type sshfsDriver struct {
 	mutex			*sync.Mutex
 	volumes			map[string]*sshfsVolume
-	baseVolumePath	string
+	volumePath		string
+	statePath		string
 }
 
 func (v *sshfsVolume) setupOptions(options map[string]string) error {
@@ -47,8 +52,21 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 			v.Password = val
 		case "port":
 			v.Port = val
+		case "IdentityFile":
+			v.IdentityFile = val
 		case "id_rsa":
-			v.IDRsa = val
+			if val != "" {
+				v.IdentityFile = v.MountPoint + "_id_rsa"
+				if err := v.saveKey(val); err != nil {
+					return err
+				}
+			}
+		case "keep_key":
+			parsedBool, err := strconv.ParseBool(val)
+			if err != nil {
+				return err
+			}
+			v.keepKey = parsedBool
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
@@ -62,55 +80,84 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 		return fmt.Errorf("'sshcmd' option required")
 	}
 
-	if v.Password == "" && v.IDRsa == "" {
-		return fmt.Errorf("either 'password' or 'id_rsa' option must be set")
+	if v.Password == "" && v.IdentityFile == "" {
+		return fmt.Errorf("either 'password', 'IdentityFile' or 'id_rsa' option must be set")
 	}
 
-	if v.Password != "" && v.IDRsa != "" {
-		return fmt.Errorf("'password' and 'id_rsa' options are mutually exclusive")
+	if v.Password != "" && v.IdentityFile != "" {
+		return fmt.Errorf("'password' and 'IdentityFile'/'id_rsa' options are mutually exclusive")
 	}
 
 	return nil
 }
 
-func (v *sshfsVolume) initVolume() error {
-	if v.IDRsa != "" {
-		idRsa := v.MountPoint + "_id_rsa"
-		f, err := os.Create(idRsa)
-		if err != nil {
-			msg := fmt.Sprintf("Failed to create id_rsa file at %s (%s)", idRsa, err)
-			log.Error(msg)
-			return fmt.Errorf(msg)
-		}
-		f.WriteString(v.IDRsa)
-		f.Chmod(VolumeFileMode)
-		f.Close()
+
+func (v *sshfsVolume) saveKey(key string) error {
+	if key == "" {
+		return fmt.Errorf("an empty key is not alloved")
 	}
-	return  nil
+
+	f, err := os.Create(v.IdentityFile)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to create id_rsa file at %s (%s)", v.IdentityFile, err)
+		log.Error(msg)
+		return fmt.Errorf(msg)
+	}
+	f.WriteString(key)
+	f.Chmod(VolumeFileMode)
+	f.Close()
+
+	return nil
 }
 
+func newSshfsDriver(basePath string) (*sshfsDriver, error) {
+	log.Infof("Creating a new driver instance %s", basePath)
 
-func newSshfsDriver(baseVolumePath string) (*sshfsDriver, error) {
-	log.Info("Creating a new driver instance")
+	volumePath := filepath.Join(basePath, "volumes")
+	statePath := filepath.Join(basePath, "state", "sshfs-state.json")
 
-	verr := os.MkdirAll(baseVolumePath, VolumeDirMode)
-	if verr != nil {
+	if verr := os.MkdirAll(volumePath, VolumeDirMode); verr != nil {
 		return nil, verr
 	}
 
-	log.Infof("Initialized driver state, volumes='%s'", baseVolumePath)
+	log.Infof("Initialized driver, volumes='%s' state='%s", volumePath, statePath)
 
 	driver := &sshfsDriver{
 		volumes:		make(map[string]*sshfsVolume),
-		baseVolumePath:	baseVolumePath,
+		volumePath:		volumePath,
+		statePath:		statePath,
 		mutex:			&sync.Mutex{},
 	}
-	//TODO Check for exisiting volumes
+
+	data, err := ioutil.ReadFile(driver.statePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Debugf("No state found at %s", driver.statePath)
+		} else {
+			return nil, err
+		}
+	} else {
+		if err := json.Unmarshal(data, &driver.volumes); err != nil {
+			return nil, err
+		}
+	}
+
 	return driver, nil
 }
 
-// Driver API
+func (d *sshfsDriver) saveState() {
+	data, err := json.Marshal(d.volumes)
+	if err != nil {
+		log.Errorf("saveState failed %s", err)
+		return
+	}
 
+	if err := ioutil.WriteFile(d.statePath, data, VolumeFileMode); err != nil {
+		log.Errorf("Failed to write state %s to %s (%s)", data, d.statePath, err)
+	}
+}
+
+// Driver API
 func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 	log.Debugf("Create Request %s", r)
 	d.mutex.Lock()
@@ -125,13 +172,9 @@ func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 		return err
 	}
 
-	if err := vol.initVolume(); err != nil {
-		return err
-	}
-
-	// TODO, do a mount test
-
 	d.volumes[r.Name] = vol
+	d.saveState()
+
 	return nil
 }
 
@@ -183,6 +226,8 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 	}
 
 	delete(d.volumes, vol.Name)
+	d.saveState()
+
 	return nil
 }
 
@@ -220,6 +265,7 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 		}
 	}
 	vol.RefCount++
+
 	return &volume.MountResponse{Mountpoint: vol.MountPoint}, nil
 }
 
@@ -254,7 +300,7 @@ func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 // Helper methods
 
 func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
-	path := filepath.Join(d.baseVolumePath, name)
+	path := filepath.Join(d.volumePath, name)
 
 	err := os.MkdirAll(path, VolumeDirMode)
 	if err != nil {
@@ -267,6 +313,7 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		Name: name,
 		MountPoint: path,
 		CreatedAt: time.Now().Format(time.RFC3339Nano),
+		keepKey: true,
 	}
 	// Ensure mount is not active
 	d.unmountVolume(vol)
@@ -276,8 +323,8 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 	// Remove id_rsa
-	if vol.IDRsa != "" {
-		if err := os.RemoveAll(vol.MountPoint + "_id_rsa"); err != nil {
+	if vol.IdentityFile != "" && !vol.keepKey {
+		if err := os.RemoveAll(vol.IdentityFile); err != nil {
 			msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
 			log.Error(msg)
 			return fmt.Errorf(msg)
@@ -306,8 +353,8 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 		cmd.Stdin = strings.NewReader(vol.Password)
 	}
 
-	if vol.IDRsa != "" {
-		cmd.Args = append(cmd.Args, "-o", "IdentityFile=" + vol.MountPoint + "_id_rsa")
+	if vol.IdentityFile != "" {
+		cmd.Args = append(cmd.Args, "-o", "IdentityFile=" + vol.IdentityFile)
 	}
 
 	// Append the rest

@@ -7,14 +7,14 @@ import (
 )
 
 const (
-	// DefaultBaseVolumePath defines the bath within the docker plugins rootfs file system
-	DefaultBaseVolumePath = "/mnt/volumes"
+	// DefaultBasePath defines the base path within the docker plugins rootfs file system
+	DefaultBasePath = "/mnt"
 	// DefaultUnixSocket sets the path to the plugin socket
 	DefaultUnixSocket = "/run/docker/plugins/sshfs.sock"
 )
 
 func main() {
-	driver, err := newSshfsDriver(DefaultBaseVolumePath)
+	driver, err := newSshfsDriver(DefaultBasePath)
 	if err != nil {
 		log.Errorf("Failed to create the driver %s", err)
 		os.Exit(1)

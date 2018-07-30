@@ -30,6 +30,32 @@
       }
     ]
   },
+  "mounts": [
+    {
+      "destination": "/mnt/state",
+      "options": [
+        "rbind"
+      ],
+      "name": "state",
+      "source": "/var/lib/docker/plugins/",
+      "settable": [
+        "source"
+      ],
+      "type": "bind"
+    },
+    {
+      "destination": "/root/.ssh",
+      "options": [
+        "rbind"
+      ],
+      "name": "sshdir",
+      "source": "",
+      "settable": [
+        "source"
+      ],
+      "type": "bind"
+    }
+  ],
   "network": {
     "type": "host"
   },
