@@ -18,7 +18,7 @@ matrix:
     env: TESTFILE=unit.sh
   - go: master
     env: TESTFILE=unit.sh
-  - go: tip
+  - go: 1.10.x
     env: TESTFILE=integration.sh
 
 before_install:
@@ -30,12 +30,13 @@ before_install:
 script:
 - "./.travis/$TESTFILE"
 before_deploy:
+- make
 - docker build -t "${IMAGE_NAME}":"${IMAGE_VERS}" .
 deploy:
   provider: script
   script: bash docker_push
   on:
-    go: tip
+    go: 1.10.x
     branch: devel
 notifications:
   slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
