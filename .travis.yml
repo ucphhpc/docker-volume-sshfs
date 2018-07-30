@@ -18,7 +18,7 @@ matrix:
     env: TESTFILE=unit.sh
   - go: master
     env: TESTFILE=unit.sh
-  - go: 1.10.x
+  - go: 1.x.x
     env: TESTFILE=integration.sh
 
 before_install:
@@ -36,7 +36,7 @@ deploy:
   provider: script
   script: bash make push
   on:
-    go: 1.10.x
+    go: 1.x.x
     branch: devel
 notifications:
   slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
