@@ -30,11 +30,11 @@ before_install:
 script:
 - "./.travis/$TESTFILE"
 before_deploy:
+- docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 - make
-- docker build -t "${IMAGE_NAME}":"${IMAGE_VERS}" .
 deploy:
   provider: script
-  script: bash docker_push
+  script: bash make push
   on:
     go: 1.10.x
     branch: devel
