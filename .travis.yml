@@ -1,4 +1,10 @@
 ---
+env:
+  global:
+  - COMMIT=${TRAVIS_COMMIT::12}
+  - IMAGE_NAME=rasmunk/sshfs
+  - PRE_VERS=edge
+  - IMAGE_VERS=devel
   matrix:
     include:
       - language: go
@@ -23,5 +29,12 @@
 
   script:
     - ./.travis/$TESTFILE
+  before_deploy:
+    - docker build -t "${IMAGE_NAME}":"${IMAGE_VERS}" .
+  deploy:
+    provider: script
+    script: bash docker_push
+    on:
+      branch: devel
   notifications:
     slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
