@@ -12,13 +12,13 @@ env:
   - secure: meM2CiIYY3b4EAHaKrX1RIxeS9SsFQ64+9WFU3GMEN6VwBFxSotuXcak8wwHszpDc+MvfFnyd81Fq/j09Lk5E5zJ3xw9xKbBJyPnpKNBSMgnYYAFMXdGdmISD/yFf8ndcWKPbh32jt3/rD9e6bNPaak2VGPyHYMVe5m13Np+mfHumx81l6VOF6669Dg5v+iumGU4AjBJH8ibeZMpfSB62zT6cehP6Yefve29PXnyGEwzt1eZme4lx85dYpkwf02BQtF7jplxTlbv/2HF3tEx3hNRqhqtjYZ3WqlTIJVTso5byUI+xeEyXacQ3G3FSWPTa2IxBiDMQ0FKuih3Dhoaqcp74+YdY/3coLoTbsHGmQpOMAKelAQ5fHB3d0Zxu32X4gg8fX4ZSHQYm5t+RSyhxIWWwtfhGimzpE+FtRInyfYXa5CPi0GnTCFtqp0CpUO2JFWgv/de8kyj3m84LaXIiMPt3AhcKRDO8B/quE211fA7zMZdHEdmwKYun/42V71R8c1POefWWK5hihkhYZBQ1h5gA0Hp6RLN0wR6GKLI0YgDUi3IQ7WAjTX/zr0vSzP3s/d4fPrlAo8iCLokuUt8HWMajO2LOQFxKyD+XC9VI5UUdmLCu+XYp/2Vr5oFCWlrU0S+36qPh1JqKvmElbQtg5kOTo70VzdvG1VfSkXKa7U=
 matrix:
   include:
-  - go: 1.8.x
-    env: TESTFILE=unit.sh
   - go: 1.9.x
+    env: TESTFILE=unit.sh
+  - go: 1.10.x
     env: TESTFILE=unit.sh
   - go: master
     env: TESTFILE=unit.sh
-  - go:
+  - go: tip
     env: TESTFILE=integration.sh
 
 before_install:
@@ -35,6 +35,7 @@ deploy:
   provider: script
   script: bash docker_push
   on:
+    go: tip
     branch: devel
 notifications:
   slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
