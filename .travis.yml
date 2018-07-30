@@ -1,36 +1,38 @@
----
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::12}
   - IMAGE_NAME=rasmunk/sshfs
   - PRE_VERS=edge
   - IMAGE_VERS=devel
+  - secure: K8tuxXiAgMiXuGAdLS7LBJ8LZuLTuKiyE8VEYgARng31iyHJ97JsvzlhUHLd2KYZC1AU8FGii4sJglJXGP+yrkEAGQTG96ywKx0kC5gdiyYIeJXESqevfLMwHb0nJ3kUUpiUVfNMCQ1GxXTxNoElEFY2Hz4nhANEaorVJXZb/dNLnBBtQ0TzC7765tep40Of/mpqZpXJDpPDiVm/yTQ2pN56qzzCQmVmgJDQrS4TOZOWVAninVxPv1PCrgs/nY3T3hkfmBeXRZxCnyTY6XqTZqHARDR680SZnB2mQwnCwLD8/oWDDGzTotxP/oa7xH7cFSF1xqYjph+MIse0c62XRO/IO9/GaPW8OD2h4ehIKBziZufNwzEs77W+0xm9BMaI97hh1QYIeSGA6joJWwQnfX4+YQSmT+qUuT/w68OmIbPY3QEpXmnqlpb44FQUrKN0ZZK0EQnFA+399TBTplz5CYPZU/XozR4vh0FZ4fB9SQdwmQIwdYtLwg17sDmDRGup5QrG+od0Mdral5r8ZOAPEjAAMAsR/ur1lJqmPMKb2JGwdMOiU9q2ZwiVtdNRuIBw4uS8Qp/4jRIPPbXIiiaZ6aUDl24L7xojPLHX1MRvIzZ8e9ExsrvJo5OCd/jdEhzcdXl0OVpMloHexG6JTaAwtxB+Qf/uFnwOTjDIYtveBCI=
+  - secure: meM2CiIYY3b4EAHaKrX1RIxeS9SsFQ64+9WFU3GMEN6VwBFxSotuXcak8wwHszpDc+MvfFnyd81Fq/j09Lk5E5zJ3xw9xKbBJyPnpKNBSMgnYYAFMXdGdmISD/yFf8ndcWKPbh32jt3/rD9e6bNPaak2VGPyHYMVe5m13Np+mfHumx81l6VOF6669Dg5v+iumGU4AjBJH8ibeZMpfSB62zT6cehP6Yefve29PXnyGEwzt1eZme4lx85dYpkwf02BQtF7jplxTlbv/2HF3tEx3hNRqhqtjYZ3WqlTIJVTso5byUI+xeEyXacQ3G3FSWPTa2IxBiDMQ0FKuih3Dhoaqcp74+YdY/3coLoTbsHGmQpOMAKelAQ5fHB3d0Zxu32X4gg8fX4ZSHQYm5t+RSyhxIWWwtfhGimzpE+FtRInyfYXa5CPi0GnTCFtqp0CpUO2JFWgv/de8kyj3m84LaXIiMPt3AhcKRDO8B/quE211fA7zMZdHEdmwKYun/42V71R8c1POefWWK5hihkhYZBQ1h5gA0Hp6RLN0wR6GKLI0YgDUi3IQ7WAjTX/zr0vSzP3s/d4fPrlAo8iCLokuUt8HWMajO2LOQFxKyD+XC9VI5UUdmLCu+XYp/2Vr5oFCWlrU0S+36qPh1JqKvmElbQtg5kOTo70VzdvG1VfSkXKa7U=
   matrix:
     include:
-      - language: go
-        go: 1.8.x
-        env: TESTFILE=unit.sh
-      - language: go
-        go: 1.9.x
-        env: TESTFILE=unit.sh
-      - language: go
-        go: master
-        env: TESTFILE=unit.sh
-      - language: generic
-        sudo: required
-        services:
-          - docker
-        before_install:
-          - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-          - sudo apt-get update
-          - sudo apt-get -y install docker-ce
-        env: TESTFILE=integration.sh
-
+    - language: go
+      go: 1.8.x
+      env: TESTFILE=unit.sh
+    - language: go
+      go: 1.9.x
+      env: TESTFILE=unit.sh
+    - language: go
+      go: master
+      env: TESTFILE=unit.sh
+    - language: generic
+      sudo: required
+      services:
+      - docker
+      before_install:
+      - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add
+        -
+      - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu
+        $(lsb_release -cs) stable"
+      - sudo apt-get update
+      - sudo apt-get -y install docker-ce
+      env: TESTFILE=integration.sh
   script:
-    - ./.travis/$TESTFILE
+  - "./.travis/$TESTFILE"
   before_deploy:
-    - docker build -t "${IMAGE_NAME}":"${IMAGE_VERS}" .
+  - docker build -t "${IMAGE_NAME}":"${IMAGE_VERS}" .
   deploy:
     provider: script
     script: bash docker_push
