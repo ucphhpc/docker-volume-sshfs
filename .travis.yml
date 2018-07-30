@@ -31,7 +31,6 @@ script:
 - "./.travis/$TESTFILE"
 before_deploy:
 - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-- make
 deploy:
   provider: script
   script: bash make push
