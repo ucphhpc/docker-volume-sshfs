@@ -1,5 +1,5 @@
 PLUGIN_NAME = rasmunk/sshfs
-PLUGIN_TAG ?= devel
+PLUGIN_TAG ?= global
 
 all: clean rootfs create
 
