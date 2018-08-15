@@ -1,4 +1,4 @@
-FROM golang:1.9-alpine as builder
+FROM golang:1.10-alpine as builder
 
 COPY . /go/src/github.com/rasmunk/docker-volume-sshfs
 WORKDIR /go/src/github.com/rasmunk/docker-volume-sshfs
@@ -14,7 +14,7 @@ FROM alpine
 
 RUN apk update && apk add sshfs
 
-RUN mkdir -p /run/docker/plugins /mnt/volumes
+RUN mkdir -p /run/docker/plugins /mnt/state /mnt/volumes
 
 COPY --from=builder /go/bin/docker-volume-sshfs .
 
