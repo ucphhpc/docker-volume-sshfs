@@ -31,7 +31,7 @@ type sshfsVolume struct {
 	Options			[]string
 	SSHCmd			string
 	IdentityFile	string
-	keepKey 		bool
+	OneTime 		bool
 	Password		string
 	Port			string
 }
@@ -61,12 +61,12 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 					return err
 				}
 			}
-		case "keep_key":
+		case "one_time":
 			parsedBool, err := strconv.ParseBool(val)
 			if err != nil {
 				return err
 			}
-			v.keepKey = parsedBool
+			v.OneTime = parsedBool
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
@@ -313,7 +313,7 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		Name: name,
 		MountPoint: path,
 		CreatedAt: time.Now().Format(time.RFC3339Nano),
-		keepKey: true,
+		OneTime: false,
 	}
 	// Ensure mount is not active
 	d.unmountVolume(vol)
@@ -323,8 +323,8 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 	// Remove id_rsa
-	if vol.IdentityFile != "" && !vol.keepKey {
-		if err := os.RemoveAll(vol.IdentityFile); err != nil {
+	if vol.IdentityFile != "" && vol.OneTime {
+		if err := os.Remove(vol.IdentityFile); err != nil {
 			msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
 			log.Error(msg)
 			return fmt.Errorf(msg)
@@ -332,7 +332,7 @@ func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 	}
 
 	// Remove MountPoint
-	if  err := os.RemoveAll(vol.MountPoint); err != nil {
+	if  err := os.Remove(vol.MountPoint); err != nil {
 		msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
 		log.Error(msg)
 		return fmt.Errorf(msg)
@@ -374,5 +374,18 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 
 func (d *sshfsDriver) unmountVolume(vol *sshfsVolume) error {
 	cmd := fmt.Sprintf("umount %s", vol.MountPoint)
-	return exec.Command("sh", "-c", cmd).Run()
+	if err := exec.Command("sh", "-c", cmd).Run(); err != nil {
+		return err
+	}
+	// Check that the mountpoint is empty
+	files, err := ioutil.ReadDir(vol.MountPoint)
+	if err != nil {
+		return err
+	}
+
+	if len(files) > 0 {
+		return fmt.Errorf("after unmount %d files still exists in %s", len(files), vol.MountPoint)
+	}
+
+	return nil
 }
