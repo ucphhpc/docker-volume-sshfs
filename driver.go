@@ -184,7 +184,7 @@ func (d *sshfsDriver) List() (*volume.ListResponse, error) {
 	var vols = []*volume.Volume{}
 	for _, vol := range d.volumes {
 		vols = append(vols,
-			&volume.Volume{Name: vol.Name, Mountpoint: vol.MountPoint, CreatedAt: vol.CreatedAt})
+			&volume.Volume{Name: vol.Name, Mountpoint: vol.MountPoint})
 	}
 	return &volume.ListResponse{Volumes: vols}, nil
 }
@@ -200,7 +200,7 @@ func (d *sshfsDriver) Get(r *volume.GetRequest) (*volume.GetResponse, error) {
 	}
 
 	return &volume.GetResponse{Volume:
-		&volume.Volume{Name: vol.Name, Mountpoint: vol.MountPoint, CreatedAt: vol.CreatedAt}}, nil
+		&volume.Volume{Name: vol.Name, Mountpoint: vol.MountPoint}}, nil
 }
 
 func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
