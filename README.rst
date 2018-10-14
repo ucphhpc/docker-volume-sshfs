@@ -1,7 +1,11 @@
-# Docker volume plugin for sshFS
+------------------------------
+Docker volume plugin for sshFS
+------------------------------
+
+.. image:: https://travis-ci.org/rasmunk/docker-volume-sshfs.svg?branch=master
+    :target: https://travis-ci.org/rasmunk/docker-volume-sshfs
 
 See vieux/sshfs for original documentation
-
 
 Usage
 ```
