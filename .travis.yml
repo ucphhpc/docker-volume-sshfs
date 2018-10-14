@@ -36,6 +36,6 @@ deploy:
   script: sudo make push
   on:
     go: 1.x.x
-    branch: global
+    branch: master
 notifications:
   slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
