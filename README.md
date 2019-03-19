@@ -1,12 +1,8 @@
-------------------------------
-Docker volume plugin for sshFS
-------------------------------
+# Docker volume plugin for sshFS
 
 [![Build Status](https://travis-ci.org/rasmunk/docker-volume-sshfs.svg?branch=master)](https://travis-ci.org/rasmunk/docker-volume-sshfs)
 
 See vieux/sshfs for original documentation
-
-# Docker volume plugin for sshFS
 
 This plugin allows you to mount remote folder using sshfs in your container easily.
 
