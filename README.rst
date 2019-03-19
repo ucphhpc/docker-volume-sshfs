@@ -11,7 +11,3 @@ Usage
 ```
 $ docker run -it -v sshvolume:<path> busybox ls <path>
 ```
-
-## LICENSE
-
-MIT
