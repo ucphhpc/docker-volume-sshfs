@@ -20,7 +20,7 @@ COPY --from=builder /go/bin/docker-volume-sshfs .
 
 # Tini to reap orphaned child procceses
 # Add Tini
-RUN apk add --nocache tini
+RUN apk add tini
 ENTRYPOINT ["/sbin/tini", "--"]
 
 CMD ["docker-volume-sshfs"]
