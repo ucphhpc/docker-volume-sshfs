@@ -46,5 +46,5 @@ deploy:
   provider: script
   script: sudo make push
   on:
-    go: 1.10.x
+    go: 1.14.x
     branch: master
