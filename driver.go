@@ -174,7 +174,6 @@ func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 
 	d.volumes[r.Name] = vol
 	d.saveState()
-
 	return nil
 }
 
@@ -215,7 +214,7 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 		return fmt.Errorf(msg)
 	}
 
-	if vol.RefCount != 0 {
+	if vol.RefCount > 0 {
 		msg := fmt.Sprintf("Can't remove volume %s because it is mounted by %d containers", vol.Name, vol.RefCount)
 		log.Error(msg)
 		return fmt.Errorf(msg)
@@ -227,7 +226,6 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 
 	delete(d.volumes, vol.Name)
 	d.saveState()
-
 	return nil
 }
 
@@ -257,7 +255,7 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 	}
 
 	if vol.RefCount == 0 {
-		log.Debugf("First volume reference %s", vol.Name)
+		log.Debugf("First volume mount %s establish connection to %s", vol.Name, vol.SSHCmd)
 		if merr := d.mountVolume(vol); merr != nil {
 			msg := fmt.Sprintf("Failed to mount %s, %s", vol.Name, merr)
 			log.Error(msg)
@@ -265,7 +263,7 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 		}
 	}
 	vol.RefCount++
-
+	d.saveState()
 	return &volume.MountResponse{Mountpoint: vol.MountPoint}, nil
 }
 
@@ -288,7 +286,7 @@ func (d *sshfsDriver) Unmount(r *volume.UnmountRequest) error {
 		}
 		vol.RefCount = 0
 	}
-
+	d.saveState()
 	return nil
 }
 
@@ -300,6 +298,8 @@ func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 // Helper methods
 
 func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 	path := filepath.Join(d.volumePath, name)
 
 	err := os.MkdirAll(path, VolumeDirMode)
@@ -314,10 +314,9 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		MountPoint: path,
 		CreatedAt: time.Now().Format(time.RFC3339Nano),
 		OneTime: false,
+		RefCount: 0,
 	}
-	// Ensure mount is not active
-	d.unmountVolume(vol)
-
+	d.saveState()
 	return vol, nil
 }
 

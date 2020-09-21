@@ -37,5 +37,3 @@ deploy:
   on:
     go: 1.x.x
     branch: master
-notifications:
-  slack: raz-s:se1PurXsQJv03nBZa9XWMOOS
