@@ -1,18 +1,18 @@
 package main
 
 import (
-	"os"
-	"sync"
+	"encoding/json"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
-	"path/filepath"
-	"fmt"
-	"os/exec"
-	"time"
-	"encoding/json"
-	"strings"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
 const (
@@ -141,7 +141,6 @@ func newSshfsDriver(basePath string) (*sshfsDriver, error) {
 			return nil, err
 		}
 	}
-
 	return driver, nil
 }
 
@@ -256,8 +255,8 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 
 	if vol.RefCount == 0 {
 		log.Debugf("First volume mount %s establish connection to %s", vol.Name, vol.SSHCmd)
-		if merr := d.mountVolume(vol); merr != nil {
-			msg := fmt.Sprintf("Failed to mount %s, %s", vol.Name, merr)
+		if err := d.mountVolume(vol); err != nil {
+			msg := fmt.Sprintf("Failed to mount %s, %s", vol.Name, err)
 			log.Error(msg)
 			return &volume.MountResponse{}, fmt.Errorf(msg)
 		}
@@ -298,10 +297,7 @@ func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 // Helper methods
 
 func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
 	path := filepath.Join(d.volumePath, name)
-
 	err := os.MkdirAll(path, VolumeDirMode)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to create the volume mount path %s (%s)", path, err)
@@ -316,7 +312,6 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		OneTime: false,
 		RefCount: 0,
 	}
-	d.saveState()
 	return vol, nil
 }
 
