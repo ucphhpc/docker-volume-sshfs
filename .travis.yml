@@ -24,9 +24,6 @@ matrix:
   - language: go
     go: 1.14.x
     env: TESTFILE=unit.sh
-  - language: go
-    go: master
-    env: TESTFILE=unit.sh
   - language: generic
     sudo: required
     services:
