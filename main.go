@@ -4,6 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
 	"os"
+	"strconv"
 )
 
 const (
@@ -14,12 +15,17 @@ const (
 )
 
 func main() {
+	debug := os.Getenv("DEBUG")
+	if ok, _ := strconv.ParseBool(debug); ok {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	driver, err := newSshfsDriver(DefaultBasePath)
 	if err != nil {
 		log.Errorf("Failed to create the driver %s", err)
 		os.Exit(1)
 	}
-	log.SetLevel(log.DebugLevel)
+
 	handler := volume.NewHandler(driver)
 	handler.ServeUnix(DefaultUnixSocket, 0)
 }

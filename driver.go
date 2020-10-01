@@ -230,7 +230,6 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 
 func (d *sshfsDriver) Path(r *volume.PathRequest) (*volume.PathResponse, error) {
 	log.Debugf("Path Request %s", r)
-
 	vol, ok := d.volumes[r.Name]
 	if !ok {
 		msg := fmt.Sprintf("Failed to find path for volume %s because it doesn't exists", r.Name)
