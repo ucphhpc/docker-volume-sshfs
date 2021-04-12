@@ -319,7 +319,6 @@ func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 		if err := os.Remove(vol.IdentityFile); err != nil {
 			msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
 			log.Error(msg)
-			return fmt.Errorf(msg)
 		}
 	}
 
