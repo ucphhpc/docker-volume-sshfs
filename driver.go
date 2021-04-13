@@ -314,21 +314,27 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 }
 
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
-	// Remove id_rsa
-	if vol.IdentityFile != "" && vol.OneTime {
-		if err := os.Remove(vol.IdentityFile); err != nil {
-			msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
-			log.Error(msg)
+	// Remove id_rsa if it exist
+	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
+		if vol.IdentityFile != "" && vol.OneTime {
+			if err := os.Remove(vol.IdentityFile); err != nil {
+				msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
+				log.Error(msg)
+			}
 		}
 	}
 
 	// Remove MountPoint
-	if err := os.Remove(vol.MountPoint); err != nil {
-		msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
-		log.Error(msg)
-		return fmt.Errorf(msg)
+	// If the Mountpoint directory exist, remove it
+	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
+		// Else remove everything in that mountpoint
+		if err := os.Remove(vol.MountPoint); err != nil {
+			// If the mount is not mounted, remove legacy
+			msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
+			log.Error(msg)
+			return fmt.Errorf(msg)
+		}
 	}
-
 	return nil
 }
 
@@ -359,7 +365,6 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 	if err != nil {
 		return fmt.Errorf("sshfs command failed %v (%s)", err, output)
 	}
-
 	return nil
 }
 
