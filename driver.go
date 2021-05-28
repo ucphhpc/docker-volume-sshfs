@@ -308,10 +308,7 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		MountPoint: path,
 		CreatedAt:  time.Now().Format(time.RFC3339Nano),
 		OneTime:    false,
-<<<<<<< HEAD
-=======
 		RefCount:   0,
->>>>>>> 0e76ef67dbb82247036d67233598c13586df4b87
 	}
 	return vol, nil
 }
@@ -328,12 +325,6 @@ func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 	}
 
 	// Remove MountPoint
-<<<<<<< HEAD
-	if err := os.Remove(vol.MountPoint); err != nil {
-		msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
-		log.Error(msg)
-		return fmt.Errorf(msg)
-=======
 	// If the Mountpoint directory exist, remove it
 	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
 		// Else remove everything in that mountpoint
@@ -343,7 +334,6 @@ func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 			log.Error(msg)
 			return fmt.Errorf(msg)
 		}
->>>>>>> 0e76ef67dbb82247036d67233598c13586df4b87
 	}
 	return nil
 }
