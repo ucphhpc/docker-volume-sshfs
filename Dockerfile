@@ -1,4 +1,4 @@
-FROM golang:1.10-alpine as builder
+FROM golang:1.13.5-alpine as builder
 
 COPY . /go/src/github.com/rasmunk/docker-volume-sshfs
 WORKDIR /go/src/github.com/rasmunk/docker-volume-sshfs
@@ -11,16 +11,11 @@ RUN set -ex \
 CMD ["/go/bin/docker-volume-sshfs"]
 
 FROM alpine
-
 RUN apk update && apk add sshfs
-
 RUN mkdir -p /run/docker/plugins /mnt/state /mnt/volumes
-
 COPY --from=builder /go/bin/docker-volume-sshfs .
-
 # Tini to reap orphaned child procceses
 # Add Tini
 RUN apk add tini
 ENTRYPOINT ["/sbin/tini", "--"]
-
 CMD ["docker-volume-sshfs"]

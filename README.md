@@ -1,6 +1,6 @@
 # Docker volume plugin for sshFS
 
-[![Build Status](https://travis-ci.org/rasmunk/docker-volume-sshfs.svg?branch=master)](https://travis-ci.org/rasmunk/docker-volume-sshfs)
+[![Build Status](https://travis-ci.com/ucphhpc/docker-volume-sshfs.svg?branch=master)](https://travis-ci.com/ucphhpc/docker-volume-sshfs)
 
 See vieux/sshfs for original documentation
 

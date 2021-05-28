@@ -141,7 +141,6 @@ func newSshfsDriver(basePath string) (*sshfsDriver, error) {
 			return nil, err
 		}
 	}
-
 	return driver, nil
 }
 
@@ -174,7 +173,6 @@ func (d *sshfsDriver) Create(r *volume.CreateRequest) error {
 
 	d.volumes[r.Name] = vol
 	d.saveState()
-
 	return nil
 }
 
@@ -214,7 +212,7 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 		return fmt.Errorf(msg)
 	}
 
-	if vol.RefCount != 0 {
+	if vol.RefCount > 0 {
 		msg := fmt.Sprintf("Can't remove volume %s because it is mounted by %d containers", vol.Name, vol.RefCount)
 		log.Error(msg)
 		return fmt.Errorf(msg)
@@ -226,13 +224,11 @@ func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
 
 	delete(d.volumes, vol.Name)
 	d.saveState()
-
 	return nil
 }
 
 func (d *sshfsDriver) Path(r *volume.PathRequest) (*volume.PathResponse, error) {
 	log.Debugf("Path Request %s", r)
-
 	vol, ok := d.volumes[r.Name]
 	if !ok {
 		msg := fmt.Sprintf("Failed to find path for volume %s because it doesn't exists", r.Name)
@@ -256,15 +252,15 @@ func (d *sshfsDriver) Mount(r *volume.MountRequest) (*volume.MountResponse, erro
 	}
 
 	if vol.RefCount == 0 {
-		log.Debugf("First volume reference %s", vol.Name)
-		if merr := d.mountVolume(vol); merr != nil {
-			msg := fmt.Sprintf("Failed to mount %s, %s", vol.Name, merr)
+		log.Debugf("First volume mount %s establish connection to %s", vol.Name, vol.SSHCmd)
+		if err := d.mountVolume(vol); err != nil {
+			msg := fmt.Sprintf("Failed to mount %s, %s", vol.Name, err)
 			log.Error(msg)
 			return &volume.MountResponse{}, fmt.Errorf(msg)
 		}
 	}
 	vol.RefCount++
-
+	d.saveState()
 	return &volume.MountResponse{Mountpoint: vol.MountPoint}, nil
 }
 
@@ -287,7 +283,7 @@ func (d *sshfsDriver) Unmount(r *volume.UnmountRequest) error {
 		}
 		vol.RefCount = 0
 	}
-
+	d.saveState()
 	return nil
 }
 
@@ -300,7 +296,6 @@ func (d *sshfsDriver) Capabilities() *volume.CapabilitiesResponse {
 
 func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 	path := filepath.Join(d.volumePath, name)
-
 	err := os.MkdirAll(path, VolumeDirMode)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to create the volume mount path %s (%s)", path, err)
@@ -313,30 +308,43 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		MountPoint: path,
 		CreatedAt:  time.Now().Format(time.RFC3339Nano),
 		OneTime:    false,
+<<<<<<< HEAD
+=======
+		RefCount:   0,
+>>>>>>> 0e76ef67dbb82247036d67233598c13586df4b87
 	}
-	// Ensure mount is not active
-	d.unmountVolume(vol)
-
 	return vol, nil
 }
 
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
-	// Remove id_rsa
-	if vol.IdentityFile != "" && vol.OneTime {
-		if err := os.Remove(vol.IdentityFile); err != nil {
-			msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
-			log.Error(msg)
-			return fmt.Errorf(msg)
+	// Remove id_rsa if it exist
+	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
+		if vol.IdentityFile != "" && vol.OneTime {
+			if err := os.Remove(vol.IdentityFile); err != nil {
+				msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
+				log.Error(msg)
+			}
 		}
 	}
 
 	// Remove MountPoint
+<<<<<<< HEAD
 	if err := os.Remove(vol.MountPoint); err != nil {
 		msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
 		log.Error(msg)
 		return fmt.Errorf(msg)
+=======
+	// If the Mountpoint directory exist, remove it
+	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
+		// Else remove everything in that mountpoint
+		if err := os.Remove(vol.MountPoint); err != nil {
+			// If the mount is not mounted, remove legacy
+			msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
+			log.Error(msg)
+			return fmt.Errorf(msg)
+		}
+>>>>>>> 0e76ef67dbb82247036d67233598c13586df4b87
 	}
-
 	return nil
 }
 
@@ -367,7 +375,6 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 	if err != nil {
 		return fmt.Errorf("sshfs command failed %v %v (%s)", cmd, err, output)
 	}
-
 	return nil
 }
 
