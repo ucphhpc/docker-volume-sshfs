@@ -1,46 +1,47 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
-	"path/filepath"
-	"fmt"
-	"os/exec"
-	"time"
-	"encoding/json"
-	"strings"
-	"io/ioutil"
-	"strconv"
 )
 
 const (
 	// VolumeDirMode sets the permissions for the volume directory
-	VolumeDirMode	= 0700
+	VolumeDirMode = 0700
 	// VolumeFileMode sets permissions for the volume files
-	VolumeFileMode  = 0600
+	VolumeFileMode = 0600
 )
 
 type sshfsVolume struct {
-	Name			string
-	MountPoint		string
-	CreatedAt		string
-	RefCount 		int
+	Name       string
+	MountPoint string
+	CreatedAt  string
+	RefCount   int
 	// sshfs options
-	Options			[]string
-	SSHCmd			string
-	IdentityFile	string
-	OneTime 		bool
-	Password		string
-	Port			string
+	Options      []string
+	SSHCmd       string
+	IdentityFile string
+	OneTime      bool
+	Password     string
+	Port         string
 }
 
 type sshfsDriver struct {
-	mutex			*sync.Mutex
-	volumes			map[string]*sshfsVolume
-	volumePath		string
-	statePath		string
+	mutex      *sync.Mutex
+	volumes    map[string]*sshfsVolume
+	volumePath string
+	statePath  string
 }
 
 func (v *sshfsVolume) setupOptions(options map[string]string) error {
@@ -91,7 +92,6 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 	return nil
 }
 
-
 func (v *sshfsVolume) saveKey(key string) error {
 	if key == "" {
 		return fmt.Errorf("an empty key is not alloved")
@@ -123,10 +123,10 @@ func newSshfsDriver(basePath string) (*sshfsDriver, error) {
 	log.Infof("Initialized driver, volumes='%s' state='%s", volumePath, statePath)
 
 	driver := &sshfsDriver{
-		volumes:		make(map[string]*sshfsVolume),
-		volumePath:		volumePath,
-		statePath:		statePath,
-		mutex:			&sync.Mutex{},
+		volumes:    make(map[string]*sshfsVolume),
+		volumePath: volumePath,
+		statePath:  statePath,
+		mutex:      &sync.Mutex{},
 	}
 
 	data, err := ioutil.ReadFile(driver.statePath)
@@ -199,8 +199,7 @@ func (d *sshfsDriver) Get(r *volume.GetRequest) (*volume.GetResponse, error) {
 		return &volume.GetResponse{}, fmt.Errorf(msg)
 	}
 
-	return &volume.GetResponse{Volume:
-		&volume.Volume{Name: vol.Name, Mountpoint: vol.MountPoint}}, nil
+	return &volume.GetResponse{Volume: &volume.Volume{Name: vol.Name, Mountpoint: vol.MountPoint}}, nil
 }
 
 func (d *sshfsDriver) Remove(r *volume.RemoveRequest) error {
@@ -310,10 +309,10 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 	}
 
 	vol := &sshfsVolume{
-		Name: name,
+		Name:       name,
 		MountPoint: path,
-		CreatedAt: time.Now().Format(time.RFC3339Nano),
-		OneTime: false,
+		CreatedAt:  time.Now().Format(time.RFC3339Nano),
+		OneTime:    false,
 	}
 	// Ensure mount is not active
 	d.unmountVolume(vol)
@@ -332,7 +331,7 @@ func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 	}
 
 	// Remove MountPoint
-	if  err := os.Remove(vol.MountPoint); err != nil {
+	if err := os.Remove(vol.MountPoint); err != nil {
 		msg := fmt.Sprintf("Failed to remove the volume %s mountpoint %s (%s)", vol.Name, vol.MountPoint, err)
 		log.Error(msg)
 		return fmt.Errorf(msg)
@@ -354,7 +353,7 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 	}
 
 	if vol.IdentityFile != "" {
-		cmd.Args = append(cmd.Args, "-o", "IdentityFile=" + vol.IdentityFile)
+		cmd.Args = append(cmd.Args, "-o", "IdentityFile="+vol.IdentityFile)
 	}
 
 	// Append the rest
@@ -366,7 +365,7 @@ func (d *sshfsDriver) mountVolume(vol *sshfsVolume) error {
 	log.Debugf("Executing mount command %v", cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("sshfs command failed %v (%s)", err, output)
+		return fmt.Errorf("sshfs command failed %v %v (%s)", cmd, err, output)
 	}
 
 	return nil
