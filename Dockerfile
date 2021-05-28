@@ -1,7 +1,7 @@
 FROM golang:1.13.5-alpine as builder
 
-COPY . /go/src/github.com/rasmunk/docker-volume-sshfs
-WORKDIR /go/src/github.com/rasmunk/docker-volume-sshfs
+COPY . /go/src/github.com/nielsbohr/docker-volume-sshfs
+WORKDIR /go/src/github.com/nielsbohr/docker-volume-sshfs
 
 RUN set -ex \
     && apk add --no-cache --virtual .build-deps \
