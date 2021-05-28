@@ -1,4 +1,4 @@
-PLUGIN_NAME = rasmunk/sshfs
+PLUGIN_NAME = ucphhpc/sshfs
 PLUGIN_TAG ?= latest
 
 all: clean rootfs create
