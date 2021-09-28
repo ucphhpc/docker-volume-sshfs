@@ -1,4 +1,4 @@
-module github.com/nielsbohr/docker-volume-sshfs
+module github.com/ucphhpc/docker-volume-sshfs
 
 go 1.13
 
