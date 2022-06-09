@@ -10,5 +10,4 @@ require (
 	github.com/docker/go-plugins-helpers v0.0.0-20170817192157-a9ef19c479cb
 	github.com/stretchr/testify v1.6.1 // indirect
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
-	gopkg.in/yaml.v3 v3.0.0
 )
