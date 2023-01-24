@@ -1,4 +1,4 @@
-FROM golang:1.17.1-alpine as builder
+FROM golang:1.19.5-alpine as builder
 
 COPY . /go/src/github.com/ucphhpc/docker-volume-sshfs
 WORKDIR /go/src/github.com/ucphhpc/docker-volume-sshfs

@@ -5,21 +5,9 @@ set -x
 
 TAG=test
 
-# before_install
-#curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-#sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-#sudo apt-get update
-#sudo apt-get -y install docker-ce
-
 # install
-sudo docker pull rastasheep/ubuntu-sshd
+sudo docker pull ucphhpc/ssh-mount-dummy
 sudo docker pull busybox
-
-# permissions
-sudo chmod 600 .travis/ssh/id_rsa
-
-docker build -t sshd .travis/ssh
-#script
 
 # make the plugin
 sudo PLUGIN_TAG=$TAG make
