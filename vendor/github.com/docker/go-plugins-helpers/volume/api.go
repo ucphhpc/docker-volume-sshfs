@@ -129,7 +129,7 @@ func NewHandler(driver Driver) *Handler {
 
 func (h *Handler) initMux() {
 	h.HandleFunc(createPath, func(w http.ResponseWriter, r *http.Request) {
-		log.("Entering go-plugins-helpers createPath")
+		log.Debugf("Entering go-plugins-helpers createPath")
 		req := &CreateRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
