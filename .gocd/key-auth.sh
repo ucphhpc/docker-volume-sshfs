@@ -54,6 +54,8 @@ sleep 20
 docker exec -it $SSH_MOUNT_CONTAINER bash -c $"echo \n >> $MOUNT_PATH/.ssh/authorized_keys"
 docker exec -it $SSH_MOUNT_CONTAINER bash -c "echo $MOUNT_SSH_PUB_KEY_CONTENT >> $MOUNT_PATH/.ssh/authorized_keys"
 
+echo "------------ test 1 IdentityFile flag ------------\n"
+
 # test1: ssh key
 docker plugin disable $SSH_MOUNT_PLUGIN
 docker plugin set $SSH_MOUNT_PLUGIN sshkey.source=$TEST_SSH_KEY_DIRECTORY
@@ -62,6 +64,8 @@ docker volume create -d $SSH_MOUNT_PLUGIN -o IdentityFile=/root/.ssh/id_rsa -o s
 docker run --rm -v $SSH_TEST_VOLUME:/write busybox sh -c "echo hello > /write/world"
 docker run --rm -v $SSH_TEST_VOLUME:/read busybox grep -Fxq hello /read/world
 docker volume rm $SSH_TEST_VOLUME
+
+echo "------------ test 2 id_rsa flag ------------\n"
 
 # test2: ssh id_rsa flag
 docker volume create -d $SSH_MOUNT_PLUGIN -o sshcmd=$MOUNT_USER@$MOUNT_HOST:$MOUNT_PATH -o port=$MOUNT_PORT -o id_rsa="$(cat $TEST_SSH_KEY_PATH)" $SSH_TEST_VOLUME
