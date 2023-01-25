@@ -1,0 +1,34 @@
+environments:
+  docker_image:
+    environments:
+      GIT_USER: "{{SECRET:[github][username]}}"
+    pipelines:
+      - docker-volume-sshfs
+pipelines:
+  docker-volume-sshfs:
+    group: docker_image
+    locking: off
+    materials:
+      docker-volume-sshfs_git:  # this is the name of material
+        # says about type of material and url at once
+        name: docker-volume-sshfs
+        git: https://github.com/ucphhpc/docker-volume-sshfs.git
+        branch: master
+        destination: docker-volume-sshfs
+      publish_docker_git:  # this is the name of material
+        # says about type of material and url at once
+        name: publish-docker-scripts
+        git: https://github.com/rasmunk/publish-docker-scripts.git
+        branch: main
+        username: ${GIT_USER}
+        password: "{{SECRET:[github][access_token]}}"
+        destination: publish-docker-scripts
+    parameters:
+      IMAGE: docker-volume-sshfs
+      ARGS: ''
+      COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
+      DEFAULT_TAG: latest
+      SRC_DIRECTORY: docker-volume-sshfs
+      TEST_DIRECTORY: docker-volume-sshfs
+      PUSH_DIRECTORY: publish-docker-scripts
+    template: docker_image
