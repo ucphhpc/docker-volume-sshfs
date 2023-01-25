@@ -1,5 +1,5 @@
-PLUGIN_NAME = ucphhpc/sshfs
-PLUGIN_TAG ?= latest
+PLUGIN_NAME=ucphhpc/sshfs
+PLUGIN_TAG?=latest
 
 all: clean rootfs create
 
