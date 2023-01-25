@@ -1,3 +1,5 @@
 docker-volume-sshfs
 plugin/
 .idea/
+
+.gocd/ssh/
