@@ -1,5 +1,9 @@
+# Ignore application built files
 docker-volume-sshfs
 plugin/
+# Ignore the PyCharm editor files
 .idea/
-
+# Ignore VSCode files
+.vscode/
+# Ignore the test SSH details
 .gocd/ssh/
