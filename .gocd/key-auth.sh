@@ -34,7 +34,7 @@ if [ ! -r $TEST_SSH_KEY_PATH ]; then
 fi
 
 # Read in the public key
-MOUNT_SSH_PUB_KEY_CONTENT=`cat $TEST_SSH_KEY_PATH`
+MOUNT_SSH_PUB_KEY_CONTENT=`cat $TEST_SSH_KEY_PATH.pub`
 
 # make the plugin
 PLUGIN_TAG=$TAG make
@@ -44,12 +44,15 @@ docker plugin enable $SSH_MOUNT_PLUGIN
 docker plugin ls
 # start sshd
 docker run -d -p $MOUNT_PORT:22 --name $SSH_MOUNT_CONTAINER $DOCKER_SSH_MOUNT_IMAGE
-# Copy in the public key
-docker exec -it $SSH_MOUNT_CONTAINER bash -c "echo $MOUNT_SSH_PUB_KEY_CONTENT >> $MOUNT_PATH/.ssh/authorized_keys"
-
 # It takes a while for the container to start and be ready to accept connection
 # TODO, check when container is ready instead of sleeping
 sleep 20
+
+# Copy in the public key
+# Write a newline followed by the public key
+# https://unix.stackexchange.com/questions/191694/how-to-put-a-newline-special-character-into-a-file-using-the-echo-command-and-re
+docker exec -it $SSH_MOUNT_CONTAINER bash -c $"echo \n >> $MOUNT_PATH/.ssh/authorized_keys"
+docker exec -it $SSH_MOUNT_CONTAINER bash -c "echo $MOUNT_SSH_PUB_KEY_CONTENT >> $MOUNT_PATH/.ssh/authorized_keys"
 
 # test1: ssh key
 docker plugin disable $SSH_MOUNT_PLUGIN

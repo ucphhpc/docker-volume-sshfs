@@ -61,9 +61,9 @@ docker plugin install ucphhpc/sshfs state.source=<any_folder> sshkey.source=/hom
 
 2 - Create a volume
 
-> Make sure the ***source path on the ssh server was exists***.
+> Make sure the ***source path on the ssh server exists***.
 > 
-> Or you'll be failed while use/mount the volume.
+> Or you will fail when you use/mount the volume.
 
 ```
 $ docker volume create -d ucphhpc/sshfs -o sshcmd=<user@host:path> [-o IdentityFile=/root/.ssh/<key>] [-o port=<port>] [-o <any_sshfs_-o_option> ] sshvolume
