@@ -66,6 +66,14 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 			v.IdentityFile = val
 		case "id_rsa":
 			if val != "" {
+				// Private keys should end in '\n' such
+				// that the created v.MountPoint + "_id_rsa"
+				// file is a valid IdentityFile.
+				lastChar := string(val[len(val)-1])
+				if lastChar != "\n" {
+					val += "\n"
+				}
+
 				// Copy the value of the id_rsa argument
 				// and save as a prefix to the v.MountPoint
 				v.IdentityFile = v.MountPoint + "_id_rsa"
@@ -97,7 +105,7 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 	}
 
 	if v.Password != "" && v.IdentityFile != "" {
-		return fmt.Errorf("'password' and 'identity_file', and 'id_rsa' options are mutually exclusive")
+		return fmt.Errorf("'password' and 'identity_file'/'id_rsa' options are mutually exclusive")
 	}
 
 	return nil
