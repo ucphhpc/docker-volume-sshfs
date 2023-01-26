@@ -1,10 +1,11 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/docker/go-plugins-helpers/volume"
 	"os"
 	"strconv"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/docker/go-plugins-helpers/volume"
 )
 
 const (
@@ -18,6 +19,8 @@ func main() {
 	debug := os.Getenv("DEBUG")
 	if ok, _ := strconv.ParseBool(debug); ok {
 		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
 	}
 
 	driver, err := newSshfsDriver(DefaultBasePath)
