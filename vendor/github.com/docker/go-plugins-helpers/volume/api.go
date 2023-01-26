@@ -3,7 +3,6 @@ package volume
 import (
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/sdk"
 )
 
@@ -83,8 +82,9 @@ type CapabilitiesResponse struct {
 // Volume represents a volume object for use with `Get` and `List` requests
 type Volume struct {
 	Name       string
-	Mountpoint string
-	Status     map[string]interface{}
+	Mountpoint string                 `json:",omitempty"`
+	CreatedAt  string                 `json:",omitempty"`
+	Status     map[string]interface{} `json:",omitempty"`
 }
 
 // Capability represents the list of capabilities a volume driver can return
@@ -129,7 +129,6 @@ func NewHandler(driver Driver) *Handler {
 
 func (h *Handler) initMux() {
 	h.HandleFunc(createPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers createPath")
 		req := &CreateRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
@@ -143,7 +142,6 @@ func (h *Handler) initMux() {
 		sdk.EncodeResponse(w, struct{}{}, false)
 	})
 	h.HandleFunc(removePath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers removePath")
 		req := &RemoveRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
@@ -157,7 +155,6 @@ func (h *Handler) initMux() {
 		sdk.EncodeResponse(w, struct{}{}, false)
 	})
 	h.HandleFunc(mountPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers mountPath")
 		req := &MountRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
@@ -171,7 +168,6 @@ func (h *Handler) initMux() {
 		sdk.EncodeResponse(w, res, false)
 	})
 	h.HandleFunc(hostVirtualPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers hostVirtualPath")
 		req := &PathRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
@@ -185,7 +181,6 @@ func (h *Handler) initMux() {
 		sdk.EncodeResponse(w, res, false)
 	})
 	h.HandleFunc(getPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers getPath")
 		req := &GetRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
@@ -199,7 +194,6 @@ func (h *Handler) initMux() {
 		sdk.EncodeResponse(w, res, false)
 	})
 	h.HandleFunc(unmountPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers unmountPath")
 		req := &UnmountRequest{}
 		err := sdk.DecodeRequest(w, r, req)
 		if err != nil {
@@ -213,7 +207,6 @@ func (h *Handler) initMux() {
 		sdk.EncodeResponse(w, struct{}{}, false)
 	})
 	h.HandleFunc(listPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers listPath")
 		res, err := h.driver.List()
 		if err != nil {
 			sdk.EncodeResponse(w, NewErrorResponse(err.Error()), true)
@@ -223,7 +216,6 @@ func (h *Handler) initMux() {
 	})
 
 	h.HandleFunc(capabilitiesPath, func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Entering go-plugins-helpers capabilitiesPath")
 		sdk.EncodeResponse(w, h.driver.Capabilities(), false)
 	})
 }

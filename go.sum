@@ -10,6 +10,8 @@ github.com/docker/go-connections v0.3.0 h1:3lOnM9cSzgGwx8VfK/NGOW5fLQ0GjIlCkaktF
 github.com/docker/go-connections v0.3.0/go.mod h1:Gbd7IOopHjR8Iph03tsViu4nIes5XhDvyHbTtUxmeec=
 github.com/docker/go-plugins-helpers v0.0.0-20170817192157-a9ef19c479cb h1:cjBya0EPevs0NPtO5Sr19MrJKlYVzsFIQIl9Ut9I8+I=
 github.com/docker/go-plugins-helpers v0.0.0-20170817192157-a9ef19c479cb/go.mod h1:LFyLie6XcDbyKGeVK6bHe+9aJTYCxWLBg5IrJZOaXKA=
+github.com/docker/go-plugins-helpers v0.0.0-20211224144127-6eecb7beb651 h1:YcvzLmdrP/b8kLAGJ8GT7bdncgCAiWxJZIlt84D+RJg=
+github.com/docker/go-plugins-helpers v0.0.0-20211224144127-6eecb7beb651/go.mod h1:LFyLie6XcDbyKGeVK6bHe+9aJTYCxWLBg5IrJZOaXKA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
