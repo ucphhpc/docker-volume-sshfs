@@ -60,7 +60,7 @@ echo "------------ test 1 IdentityFile flag ------------\n"
 docker plugin disable $SSH_MOUNT_PLUGIN
 docker plugin set $SSH_MOUNT_PLUGIN sshkey.source=$TEST_SSH_KEY_DIRECTORY
 docker plugin enable $SSH_MOUNT_PLUGIN
-docker volume create -d $SSH_MOUNT_PLUGIN -o IdentityFile=/root/.ssh/id_rsa -o sshcmd=$MOUNT_USER@$MOUNT_HOST:$MOUNT_PATH -o port=$MOUNT_PORT $SSH_TEST_VOLUME
+docker volume create -d $SSH_MOUNT_PLUGIN -o identity_file=/root/.ssh/id_rsa -o sshcmd=$MOUNT_USER@$MOUNT_HOST:$MOUNT_PATH -o port=$MOUNT_PORT $SSH_TEST_VOLUME
 docker run --rm -v $SSH_TEST_VOLUME:/write busybox sh -c "echo hello > /write/world"
 docker run --rm -v $SSH_TEST_VOLUME:/read busybox grep -Fxq hello /read/world
 docker volume rm $SSH_TEST_VOLUME

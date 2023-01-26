@@ -32,7 +32,7 @@ type sshfsVolume struct {
 	Options      []string
 	SSHCmd       string
 	IdentityFile string
-	OneTime      bool
+	Ephemeral    bool
 	Password     string
 	Port         string
 }
@@ -53,7 +53,7 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 			v.Password = val
 		case "port":
 			v.Port = val
-		case "IdentityFile":
+		case "identity_file":
 			v.IdentityFile = val
 		case "id_rsa":
 			if val != "" {
@@ -62,12 +62,12 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 					return err
 				}
 			}
-		case "one_time":
+		case "ephemeral":
 			parsedBool, err := strconv.ParseBool(val)
 			if err != nil {
 				return err
 			}
-			v.OneTime = parsedBool
+			v.Ephemeral = parsedBool
 		default:
 			if val != "" {
 				v.Options = append(v.Options, key+"="+val)
@@ -82,11 +82,11 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 	}
 
 	if v.Password == "" && v.IdentityFile == "" {
-		return fmt.Errorf("either 'password', 'IdentityFile' or 'id_rsa' option must be set")
+		return fmt.Errorf("either 'password', 'identity_file', or 'id_rsa' option must be set")
 	}
 
 	if v.Password != "" && v.IdentityFile != "" {
-		return fmt.Errorf("'password' and 'IdentityFile'/'id_rsa' options are mutually exclusive")
+		return fmt.Errorf("'password' and 'identity_file', and 'id_rsa' options are mutually exclusive")
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func (v *sshfsVolume) saveKey(key string) error {
 
 	f, err := os.Create(v.IdentityFile)
 	if err != nil {
-		msg := fmt.Sprintf("Failed to create id_rsa file at %s (%s)", v.IdentityFile, err)
+		msg := fmt.Sprintf("Failed to create the identity_file file at %s (%s)", v.IdentityFile, err)
 		log.Error(msg)
 		return fmt.Errorf(msg)
 	}
@@ -307,7 +307,7 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 		Name:       name,
 		MountPoint: path,
 		CreatedAt:  time.Now().Format(time.RFC3339Nano),
-		OneTime:    false,
+		Ephemeral:  false,
 		RefCount:   0,
 	}
 	return vol, nil
@@ -316,7 +316,7 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
 	// Remove id_rsa if it exist
 	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
-		if vol.IdentityFile != "" && vol.OneTime {
+		if vol.IdentityFile != "" && vol.Ephemeral {
 			if err := os.Remove(vol.IdentityFile); err != nil {
 				msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
 				log.Error(msg)
