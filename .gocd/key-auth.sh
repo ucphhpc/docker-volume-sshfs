@@ -54,7 +54,7 @@ sleep 20
 docker exec -it $SSH_MOUNT_CONTAINER bash -c $"echo \n >> $MOUNT_PATH/.ssh/authorized_keys"
 docker exec -it $SSH_MOUNT_CONTAINER bash -c "echo $MOUNT_SSH_PUB_KEY_CONTENT >> $MOUNT_PATH/.ssh/authorized_keys"
 
-echo "------------ test 1 IdentityFile flag ------------\n"
+echo "------------ test 1 identity_file flag ------------\n"
 
 # test1: ssh key
 docker plugin disable $SSH_MOUNT_PLUGIN
