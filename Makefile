@@ -31,3 +31,8 @@ enable:
 push:  clean rootfs create enable
 	@echo "### push plugin ${PLUGIN_NAME}:${PLUGIN_TAG}"
 	@docker plugin push ${PLUGIN_NAME}:${PLUGIN_TAG}
+
+
+check:
+	@.gocd/integration.sh
+	@.gocd/key-auth.sh
