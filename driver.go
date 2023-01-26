@@ -24,17 +24,26 @@ const (
 )
 
 type sshfsVolume struct {
-	Name       string
+	// Name of the volume
+	Name string
+	// Path to where on the host system the mount is created
 	MountPoint string
-	CreatedAt  string
-	RefCount   int
+	// When it was created
+	CreatedAt string
+	// Number of containers that are using the volume
+	RefCount int
 	// sshfs options
-	Options      []string
-	SSHCmd       string
+	Options []string
+	SSHCmd  string
+	// File that contains the private key
 	IdentityFile string
-	Ephemeral    bool
-	Password     string
-	Port         string
+	// Should the private key be ephemeral
+	// Shall it be removed after the first mount
+	Ephemeral bool
+	// Password used to authenticate
+	Password string
+	// Port on which the volume will try to connect with SSH
+	Port string
 }
 
 type sshfsDriver struct {
@@ -57,6 +66,8 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 			v.IdentityFile = val
 		case "id_rsa":
 			if val != "" {
+				// Copy the value of the id_rsa argument
+				// and save as a prefix to the v.MountPoint
 				v.IdentityFile = v.MountPoint + "_id_rsa"
 				if err := v.saveKey(val); err != nil {
 					return err
@@ -94,7 +105,7 @@ func (v *sshfsVolume) setupOptions(options map[string]string) error {
 
 func (v *sshfsVolume) saveKey(key string) error {
 	if key == "" {
-		return fmt.Errorf("an empty key is not alloved")
+		return fmt.Errorf("can't save an empty key")
 	}
 
 	f, err := os.Create(v.IdentityFile)
@@ -314,11 +325,11 @@ func (d *sshfsDriver) newVolume(name string) (*sshfsVolume, error) {
 }
 
 func (d *sshfsDriver) removeVolume(vol *sshfsVolume) error {
-	// Remove id_rsa if it exist
+	// Remove the IdentityFile path if it exists
 	if _, err := os.Stat(vol.MountPoint); !os.IsNotExist(err) {
 		if vol.IdentityFile != "" && vol.Ephemeral {
 			if err := os.Remove(vol.IdentityFile); err != nil {
-				msg := fmt.Sprintf("Failed to remove the volume %s id_rsa %s (%s)", vol.Name, vol.MountPoint, err)
+				msg := fmt.Sprintf("Ephemeral - Failed to remove the volume %s's identity file: %s (%s)", vol.Name, vol.IdentityFile, err)
 				log.Error(msg)
 			}
 		}
