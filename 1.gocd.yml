@@ -26,8 +26,9 @@ pipelines:
     parameters:
       IMAGE: docker-volume-sshfs
       ARGS: ''
-      COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
       DEFAULT_TAG: latest
+      COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
+      EXTRA_TAG: ''
       SRC_DIRECTORY: docker-volume-sshfs
       TEST_DIRECTORY: docker-volume-sshfs
       PUSH_DIRECTORY: publish-docker-scripts
