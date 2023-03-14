@@ -51,8 +51,8 @@ sleep 20
 # Copy in the public key
 # Write a newline followed by the public key
 # https://unix.stackexchange.com/questions/191694/how-to-put-a-newline-special-character-into-a-file-using-the-echo-command-and-re
-docker exec -it $SSH_MOUNT_CONTAINER bash -c $"echo \n >> $MOUNT_PATH/.ssh/authorized_keys"
-docker exec -it $SSH_MOUNT_CONTAINER bash -c "echo $MOUNT_SSH_PUB_KEY_CONTENT >> $MOUNT_PATH/.ssh/authorized_keys"
+echo "echo \n >> $MOUNT_PATH/.ssh/authorized_keys" | docker exec -i $SSH_MOUNT_CONTAINER bash -
+echo "echo $MOUNT_SSH_PUB_KEY_CONTENT >> $MOUNT_PATH/.ssh/authorized_keys" | docker exec -it $SSH_MOUNT_CONTAINER bash -
 
 echo "------------ test 1 identity_file flag ------------\n"
 
