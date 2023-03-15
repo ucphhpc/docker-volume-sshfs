@@ -1,5 +1,6 @@
 PLUGIN_NAME=ucphhpc/sshfs
 PLUGIN_TAG?=latest
+PLATFORMS=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8
 
 all: clean rootfs create
 
@@ -28,9 +29,10 @@ enable:
 	@echo "### enable plugin ${PLUGIN_NAME}:${PLUGIN_TAG}"		
 	@docker plugin enable ${PLUGIN_NAME}:${PLUGIN_TAG}
 
+# https://github.com/docker/buildx/issues/1513
 push:  clean rootfs create enable
 	@echo "### push plugin ${PLUGIN_NAME}:${PLUGIN_TAG}"
-	@docker plugin push ${PLUGIN_NAME}:${PLUGIN_TAG}
+	@docker buildx build --push --platform $(PLATFORMS) -t ${PLUGIN_NAME}:${PLUGIN_TAG} --provenance false .
 
 uninstallcheck:
 ### PLACEHOLDER (it's purpose is to uninstall depedencies for check) ###
