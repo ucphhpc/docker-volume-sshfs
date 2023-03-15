@@ -1,4 +1,4 @@
-FROM golang:1.19.5-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:alpine as builder
 
 COPY . /go/src/github.com/ucphhpc/docker-volume-sshfs
 WORKDIR /go/src/github.com/ucphhpc/docker-volume-sshfs
