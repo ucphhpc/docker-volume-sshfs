@@ -32,7 +32,7 @@ enable:
 # https://github.com/docker/buildx/issues/1513
 push:  clean rootfs create enable
 	@echo "### push plugin ${PLUGIN_NAME}:${PLUGIN_TAG}"
-	@docker buildx build --push --platform $(PLATFORMS) -t ${PLUGIN_NAME}:${PLUGIN_TAG} --provenance false .
+	@docker plugin push ${PLUGIN_NAME}:${PLUGIN_TAG}
 
 uninstallcheck:
 ### PLACEHOLDER (it's purpose is to uninstall depedencies for check) ###
