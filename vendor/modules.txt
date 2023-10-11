@@ -9,15 +9,14 @@ github.com/docker/go-connections/sockets
 # github.com/docker/go-plugins-helpers v0.0.0-20211224144127-6eecb7beb651
 github.com/docker/go-plugins-helpers/sdk
 github.com/docker/go-plugins-helpers/volume
-# golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+# golang.org/x/crypto v0.14.0
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.7.0
+# golang.org/x/net v0.17.0
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
-# golang.org/x/sys v0.5.0
-golang.org/x/sys/internal/unsafeheader
+# golang.org/x/sys v0.13.0
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.5.0
+# golang.org/x/term v0.13.0
 golang.org/x/term
