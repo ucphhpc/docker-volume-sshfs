@@ -8,6 +8,7 @@ RUN set -ex \
     gcc libc-dev \
     && go install --ldflags '-extldflags "-static"' \
     && apk del .build-deps
+
 CMD ["/go/bin/docker-volume-sshfs"]
 
 FROM alpine
