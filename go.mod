@@ -9,5 +9,5 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/go-plugins-helpers v0.0.0-20211224144127-6eecb7beb651
 	github.com/stretchr/testify v1.6.1 // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 )
