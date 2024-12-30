@@ -29,7 +29,8 @@ pipelines:
         destination: publish-docker-scripts
     parameters:
       IMAGE: docker-volume-sshfs
-      ARGS: ''
+      BUILD_ARGS: ''
+      TEST_ARGS: ''
       DEFAULT_TAG: latest
       COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
       EXTRA_TAG: ''
