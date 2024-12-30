@@ -37,12 +37,12 @@ push:  clean rootfs create enable
 	@echo "### push plugin ${PLUGIN_NAME}:${PLUGIN_TAG}"
 	@docker plugin push ${PLUGIN_NAME}:${PLUGIN_TAG}
 
-uninstallcheck:
-### PLACEHOLDER (it's purpose is to uninstall depedencies for check) ###
+uninstalltest:
+### PLACEHOLDER (it's purpose is to uninstall depedencies for test) ###
 
-installcheck:
-### PLACEHOLDER (this will install the dependencies for check) ###
+installtest:
+### PLACEHOLDER (this will install the dependencies for test) ###
 
-check:
+test:
 	@.gocd/integration.sh
 	@.gocd/key-auth.sh

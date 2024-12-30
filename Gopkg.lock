@@ -11,7 +11,7 @@
 
 [[projects]]
   digest = "1:65e73320363f0078334ff9231336b9dac5d4e90b5f9b8af4be7068a089f87eee"
-  name = "github.com/Sirupsen/logrus"
+  name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
   revision = "181d419aa9e2223811b824e8f0b4af96f9ba9302"
@@ -70,7 +70,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/Sirupsen/logrus",
+    "github.com/sirupsen/logrus",
     "github.com/docker/go-plugins-helpers/volume",
   ]
   solver-name = "gps-cdcl"
