@@ -25,20 +25,12 @@ docker pull $DOCKER_SSH_MOUNT_IMAGE
 docker pull busybox
 
 # Remove any conflicting docker items
-# docker stop $SSH_MOUNT_CONTAINER
-# docker rm -f $SSH_MOUNT_CONTAINER
-# docker volume rm $SSH_TEST_VOLUME
-# docker plugin disable $SSH_MOUNT_PLUGIN
-# docker plugin remove $SSH_MOUNT_PLUGIN
+make testclean clean
 
 # make the plugin
-PLUGIN_TAG=$TAG make
-# enable the plugin
-docker plugin enable $SSH_MOUNT_PLUGIN
-# list plugins
-docker plugin ls
+PLUGIN_TAG=${TAG} make
 # start sshd
-docker run -d -p $MOUNT_PORT:22 --name $SSH_MOUNT_CONTAINER $DOCKER_SSH_MOUNT_IMAGE
+docker run -d -p ${MOUNT_PORT}:22 --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOUNT_IMAGE}
 # It takes a while for the container to start and be ready to accept connection
 # TODO, check when container is ready instead of sleeping
 sleep 20
@@ -78,10 +70,5 @@ docker run --rm -v $SSH_TEST_VOLUME:/write busybox sh -c "echo hello > /write/wo
 docker run --rm -v $SSH_TEST_VOLUME:/read busybox grep -Fxq hello /read/world
 docker volume rm $SSH_TEST_VOLUME
 
-# remove the test mount container
-docker stop $SSH_MOUNT_CONTAINER
-docker rm $SSH_MOUNT_CONTAINER
-
-# remove the plugin
-docker plugin disable $SSH_MOUNT_PLUGIN
-docker plugin remove $SSH_MOUNT_PLUGIN
+# Cleanup
+make testclean clean

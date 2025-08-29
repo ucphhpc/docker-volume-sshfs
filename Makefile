@@ -1,8 +1,10 @@
 PLUGIN_NAME=ucphhpc/sshfs
 PLUGIN_TAG?=latest
-PLATFORMS=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8
+PLATFORM=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8
+TEST_SSH_MOUNT_CONTAINER=ssh-mount-dummy
+TEST_SSH_VOLUME=ssh-test-volume
 
-all: clean rootfs create
+all: clean rootfs build create
 
 clean:
 	@echo "### rm ./plugin"
@@ -20,7 +22,7 @@ rootfs:
 	@docker rm -vf tmp
 
 build:
-	@docker build --platform ${PLATFORMS} -q -t ${PLUGIN_NAME}:${PLUGIN_TAG} .
+	@docker build --platform ${PLATFORM} -q -t ${PLUGIN_NAME}:${PLUGIN_TAG} .
 
 create:
 	@echo "### remove existing plugin ${PLUGIN_NAME}:${PLUGIN_TAG} if exists"
@@ -43,6 +45,15 @@ uninstalltest:
 installtest:
 ### PLACEHOLDER (this will install the dependencies for test) ###
 
+test: override PLUGIN_TAG=test
 test:
 	@.gocd/integration.sh
 	@.gocd/key-auth.sh
+
+testclean: override PLUGIN_TAG=test
+testclean:
+	@docker stop ${TEST_SSH_MOUNT_CONTAINER} > /dev/null 2>&1 || echo 0 > /dev/null
+	@docker rm ${TEST_SSH_MOUNT_CONTAINER} --force > /dev/null 2>&1 || echo 0 > /dev/null 
+	@docker volume rm ${TEST_SSH_VOLUME} --force > /dev/null 2>&1 || echo 0 > /dev/null
+	@docker plugin disable ${PLUGIN_NAME}:${PLUGIN_TAG} --force > /dev/null 2>&1 || echo 0 > /dev/null
+	@docker plugin rm ${PLUGIN_NAME}:${PLUGIN_TAG} --force > /dev/null 2>&1 || echo 0 > /dev/null
