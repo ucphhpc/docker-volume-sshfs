@@ -20,7 +20,7 @@ rootfs:
 	@docker rm -vf tmp
 
 build:
-	@docker build -q -t ${PLUGIN_NAME}:${PLUGIN_TAG} .
+	@docker build --platform ${PLATFORMS} -q -t ${PLUGIN_NAME}:${PLUGIN_TAG} .
 
 create:
 	@echo "### remove existing plugin ${PLUGIN_NAME}:${PLUGIN_TAG} if exists"
