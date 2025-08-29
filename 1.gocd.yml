@@ -1,12 +1,12 @@
 environments:
-  docker_image:
+  docker_plugin:
     environments:
       GIT_USER: "{{SECRET:[github][username]}}"
     pipelines:
       - docker-volume-sshfs
 pipelines:
   docker-volume-sshfs:
-    group: docker_image
+    group: docker_plugin
     locking: off
     timer:
       # Run on the 1st at 00:00 of every month
@@ -29,12 +29,10 @@ pipelines:
         destination: publish-docker-scripts
     parameters:
       IMAGE: docker-volume-sshfs
-      BUILD_ARGS: ''
-      TEST_ARGS: ''
       DEFAULT_TAG: latest
       COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
-      EXTRA_TAG: ''
+      PUSH_TARGET: push
       SRC_DIRECTORY: docker-volume-sshfs
       TEST_DIRECTORY: docker-volume-sshfs
       PUSH_DIRECTORY: publish-docker-scripts
-    template: docker_image
+    template: docker_plugin
