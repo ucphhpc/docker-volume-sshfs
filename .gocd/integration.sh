@@ -9,7 +9,7 @@ TAG=test
 DOCKER_SSH_MOUNT_IMAGE=ucphhpc/ssh-mount-dummy
 SSH_MOUNT_CONTAINER=ssh-mount-dummy
 SSH_TEST_VOLUME=ssh-test-volume
-SSH_MOUNT_PLUGIN=ucphhpc/sshfs:$TAG
+SSH_MOUNT_PLUGIN=ucphhpc/sshfs:${TAG}
 
 TEST_SSH_KEY_DIRECTORY=`pwd`/.gocd/ssh
 TEST_SSH_KEY_PATH=$TEST_SSH_KEY_DIRECTORY/id_rsa
@@ -25,12 +25,12 @@ docker pull $DOCKER_SSH_MOUNT_IMAGE
 docker pull busybox
 
 # Remove any conflicting docker items
-TAG=${TAG} make testclean clean
+make testclean clean TAG=${TAG}
 
 # make the plugin
-TAG=${TAG} make
+make TAG=${TAG}
 # enable the plugin
-TAG=${TAG} make enable
+make enable TAG=${TAG}
 
 # start sshd
 docker run -d -p ${MOUNT_PORT}:22 --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOUNT_IMAGE}
@@ -74,4 +74,4 @@ docker run --rm -v $SSH_TEST_VOLUME:/read busybox grep -Fxq hello /read/world
 docker volume rm $SSH_TEST_VOLUME
 
 # Cleanup
-TAG=${TAG} make testclean clean
+make testclean clean TAG=${TAG}
