@@ -34,6 +34,10 @@ enable:
 	@echo "### enable plugin ${NAME}:${TAG}"
 	@docker plugin enable ${NAME}:${TAG}
 
+disable:
+	@echo "### disable plugin ${NAME}:${TAG}"
+	@docker plugin disable ${NAME}:${TAG}
+
 # https://github.com/docker/buildx/issues/1513
 push: clean rootfs create enable
 	@echo "### push plugin ${NAME}:${TAG}"

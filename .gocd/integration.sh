@@ -25,10 +25,13 @@ docker pull $DOCKER_SSH_MOUNT_IMAGE
 docker pull busybox
 
 # Remove any conflicting docker items
-make testclean clean
+TAG=${TAG} make testclean clean
 
 # make the plugin
-PLUGIN_TAG=${TAG} make
+TAG=${TAG} make
+# enable the plugin
+TAG=${TAG} make enable
+
 # start sshd
 docker run -d -p ${MOUNT_PORT}:22 --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOUNT_IMAGE}
 # It takes a while for the container to start and be ready to accept connection
@@ -71,4 +74,4 @@ docker run --rm -v $SSH_TEST_VOLUME:/read busybox grep -Fxq hello /read/world
 docker volume rm $SSH_TEST_VOLUME
 
 # Cleanup
-make testclean clean
+TAG=${TAG} make testclean clean

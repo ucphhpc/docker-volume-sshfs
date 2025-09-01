@@ -9,7 +9,7 @@ TAG=test
 DOCKER_SSH_MOUNT_IMAGE=ucphhpc/ssh-mount-dummy
 SSH_MOUNT_CONTAINER=ssh-mount-dummy-key
 SSH_TEST_VOLUME=ssh-test-volume-key
-SSH_MOUNT_PLUGIN=ucphhpc/sshfs:$TAG
+SSH_MOUNT_PLUGIN=ucphhpc/sshfs:${TAG}
 
 TEST_SSH_KEY_DIRECTORY=`pwd`/.gocd/ssh
 TEST_SSH_KEY_PATH=$TEST_SSH_KEY_DIRECTORY/id_rsa
@@ -37,11 +37,10 @@ fi
 MOUNT_SSH_PUB_KEY_CONTENT=`cat $TEST_SSH_KEY_PATH.pub`
 
 # make the plugin
-PLUGIN_TAG=$TAG make
+TAG=${TAG} make
 # enable the plugin
-docker plugin enable $SSH_MOUNT_PLUGIN
-# list plugins
-docker plugin ls
+TAG=${TAG} make enable
+
 # start sshd
 docker run -d -p $MOUNT_PORT:22 --name $SSH_MOUNT_CONTAINER $DOCKER_SSH_MOUNT_IMAGE
 # It takes a while for the container to start and be ready to accept connection
@@ -73,10 +72,5 @@ docker run --rm -v $SSH_TEST_VOLUME:/write busybox sh -c "echo hello > /write/wo
 docker run --rm -v $SSH_TEST_VOLUME:/read busybox grep -Fxq hello /read/world
 docker volume rm $SSH_TEST_VOLUME
 
-# remove the test mount container
-docker stop $SSH_MOUNT_CONTAINER
-docker rm $SSH_MOUNT_CONTAINER
-
-# remove the plugin
-docker plugin disable $SSH_MOUNT_PLUGIN
-docker plugin remove $SSH_MOUNT_PLUGIN
+# Cleanup
+TAG=${TAG} make testclean clean
