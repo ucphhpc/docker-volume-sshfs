@@ -1,6 +1,6 @@
 NAME=ucphhpc/sshfs
 TAG?=latest
-PLATFORM=linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8
+BUILD_ARGS=
 TEST_SSH_MOUNT_CONTAINER=ssh-mount-dummy
 TEST_SSH_VOLUME=ssh-test-volume
 
@@ -22,7 +22,7 @@ rootfs:
 	@docker rm -vf tmp
 
 build:
-	@docker build --platform ${PLATFORM} -q -t ${NAME}:${TAG} .
+	@docker build -q -t ${NAME}:${TAG} ${BUILD_ARGS} .
 
 create:
 	@echo "### remove existing plugin ${NAME}:${TAG} if exists"
