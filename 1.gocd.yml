@@ -28,7 +28,11 @@ pipelines:
         password: "{{SECRET:[github][access_token]}}"
         destination: publish-docker-scripts
     parameters:
+      NAME: docker-volume-sshfs
       IMAGE: docker-volume-sshfs
+      BUILD_ARGS: ''
+      TEST_ARGS: ''
+      EXTRA_TAG: ''
       DEFAULT_TAG: latest
       COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
       PUSH_TARGET: push
