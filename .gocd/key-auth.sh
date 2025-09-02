@@ -47,6 +47,10 @@ fi
 
 # Read in the public key
 TEST_SSH_PUB_KEY_PATH="${TEST_SSH_KEY_PATH}.pub"
+TEST_SSH_AUTH_KEYS_PATH=${TEST_SSH_KEY_DIRECTORY}/authorized_keys
+cp ${TEST_SSH_PUB_KEY_PATH} ${TEST_SSH_AUTH_KEYS_PATH}
+chown 1000:1000 ${TEST_SSH_AUTH_KEYS_PATH}
+chmod 600 ${TEST_SSH_AUTH_KEYS_PATH}
 
 # make the plugin
 make TAG="${TAG}"
@@ -60,9 +64,7 @@ docker run -d -p ${MOUNT_PORT}:22 --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOU
 sleep 20
 
 # Copy in the public key
-docker cp ${TEST_SSH_PUB_KEY_PATH} ${SSH_MOUNT_CONTAINER}:${MOUNT_PATH}/.ssh/authorized_keys
-#docker exec -it ${SSH_MOUNT_CONTAINER} bash -c "echo \n >> ${MOUNT_PATH}/.ssh/authorized_keys"
-#docker exec -it ${SSH_MOUNT_CONTAINER} bash -c "echo ${MOUNT_SSH_PUB_KEY_CONTENT} >> ${MOUNT_PATH}/ssh/authorized_keys"
+docker cp ${TEST_SSH_AUTH_KEYS_PATH} ${SSH_MOUNT_CONTAINER}:${MOUNT_PATH}/.ssh/authorized_keys
 
 echo "------------ test 1 identity_file flag ------------\n"
 
@@ -70,7 +72,7 @@ echo "------------ test 1 identity_file flag ------------\n"
 docker plugin disable ${SSH_MOUNT_PLUGIN}
 docker plugin set ${SSH_MOUNT_PLUGIN} sshkey.source=${TEST_SSH_KEY_DIRECTORY}
 docker plugin enable ${SSH_MOUNT_PLUGIN}
-docker volume create -d ${SSH_MOUNT_PLUGIN} -o identity_file=/root/.ssh/id_rsa -o sshcmd=${MOUNT_USER}@${MOUNT_HOST}:${MOUNT_PATH} -o port=${MOUNT_PORT} ${SSH_TEST_VOLUME}
+docker volume create -d ${SSH_MOUNT_PLUGIN} -o identity_file=/root/.ssh/id_rsa -o sshcmd=${MOUNT_USER}@${MOUNT_HOST}:${MOUNT_PATH} -o Ciphers=chacha20-poly1305@openssh.com -o Compression=no -o port=${MOUNT_PORT} ${SSH_TEST_VOLUME}
 docker run --rm -v ${SSH_TEST_VOLUME}:/write busybox sh -c "echo hello > /write/world"
 docker run --rm -v ${SSH_TEST_VOLUME}:/read busybox grep -Fxq hello /read/world
 docker volume rm ${SSH_TEST_VOLUME}
@@ -78,7 +80,7 @@ docker volume rm ${SSH_TEST_VOLUME}
 echo "------------ test 2 id_rsa flag ------------\n"
 
 # test2: ssh id_rsa flag
-docker volume create -d ${SSH_MOUNT_PLUGIN} -o sshcmd=${MOUNT_USER}@${MOUNT_HOST}:${MOUNT_PATH} -o port=${MOUNT_PORT} -o id_rsa="$(cat $TEST_SSH_KEY_PATH)" ${SSH_TEST_VOLUME}
+docker volume create -d ${SSH_MOUNT_PLUGIN} -o sshcmd=${MOUNT_USER}@${MOUNT_HOST}:${MOUNT_PATH} -o Ciphers=chacha20-poly1305@openssh.com -o Compression=no -o port=${MOUNT_PORT} -o id_rsa="$(cat ${TEST_SSH_KEY_PATH})" ${SSH_TEST_VOLUME}
 docker run --rm -v ${SSH_TEST_VOLUME}:/write busybox sh -c "echo hello > /write/world"
 docker run --rm -v ${SSH_TEST_VOLUME}:/read busybox grep -Fxq hello /read/world
 docker volume rm ${SSH_TEST_VOLUME}
