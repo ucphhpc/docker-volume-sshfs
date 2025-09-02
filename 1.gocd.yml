@@ -1,12 +1,12 @@
 environments:
-  docker_plugin:
+  bare_metal_docker_plugin:
     environments:
       GIT_USER: "{{SECRET:[github][username]}}"
     pipelines:
       - docker-volume-sshfs
 pipelines:
   docker-volume-sshfs:
-    group: docker_plugin
+    group: bare_metal_docker_plugin
     locking: off
     timer:
       # Run on the 1st at 00:00 of every month
@@ -39,4 +39,4 @@ pipelines:
       SRC_DIRECTORY: docker-volume-sshfs
       TEST_DIRECTORY: docker-volume-sshfs
       PUSH_DIRECTORY: publish-docker-scripts
-    template: docker_plugin
+    template: bare_metal_docker_plugin
