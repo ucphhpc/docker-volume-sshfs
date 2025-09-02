@@ -51,10 +51,10 @@ installtest:
 
 test: override TAG=test
 test:
-	@.gocd/integration.sh
-	@.gocd/key-auth.sh
+	@.gocd/integration.sh ${TEST_SSH_MOUNT_CONTAINER} ${TEST_SSH_VOLUME}
+	@.gocd/key-auth.sh ${TEST_SSH_MOUNT_CONTAINER} ${TEST_SSH_VOLUME}
 
-testclean: override TAG=test
+testclean: TAG=test
 testclean:
 	@docker stop ${TEST_SSH_MOUNT_CONTAINER} > /dev/null 2>&1 || echo 0 > /dev/null
 	@docker rm ${TEST_SSH_MOUNT_CONTAINER} --force > /dev/null 2>&1 || echo 0 > /dev/null 
