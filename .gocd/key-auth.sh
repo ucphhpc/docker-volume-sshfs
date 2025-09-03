@@ -48,9 +48,7 @@ fi
 # Read in the public key
 TEST_SSH_PUB_KEY_PATH="${TEST_SSH_KEY_PATH}.pub"
 TEST_SSH_AUTH_KEYS_PATH=${TEST_SSH_KEY_DIRECTORY}/authorized_keys
-cp ${TEST_SSH_PUB_KEY_PATH} ${TEST_SSH_AUTH_KEYS_PATH}
-chown 1000:1000 ${TEST_SSH_AUTH_KEYS_PATH}
-chmod 600 ${TEST_SSH_AUTH_KEYS_PATH}
+MOUNT_SSH_PUB_KEY_CONTENT=$(cat ${TEST_SSH_PUB_KEY_PATH})
 
 # make the plugin
 make TAG="${TAG}"
@@ -64,7 +62,8 @@ docker run -d -p ${MOUNT_PORT}:22 --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOU
 sleep 20
 
 # Copy in the public key
-docker cp ${TEST_SSH_AUTH_KEYS_PATH} ${SSH_MOUNT_CONTAINER}:${MOUNT_PATH}/.ssh/authorized_keys
+docker exec -it ${SSH_MOUNT_CONTAINER} bash -c "echo \n >> ${MOUNT_PATH}/.ssh/authorized_keys"
+docker exec -it ${SSH_MOUNT_CONTAINER} bash -c "echo ${MOUNT_SSH_PUB_KEY_CONTENT} >> ${MOUNT_PATH}/ssh/authorized_keys"
 
 echo "------------ test 1 identity_file flag ------------\n"
 
