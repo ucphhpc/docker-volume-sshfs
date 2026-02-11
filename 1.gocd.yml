@@ -31,11 +31,11 @@ pipelines:
       NAME: ucphhpc/sshfs
       IMAGE: docker-volume-sshfs
       SRC_DIRECTORY: docker-volume-sshfs
-      MAKE_BUILD_ARGS: ''
+      BUILD_MAKE_ARGS: ''
       TEST_DIRECTORY: docker-volume-sshfs
-      MAKE_TEST_ARGS: ''
+      TEST_MAKE_ARGS: ''
       PUSH_DIRECTORY: publish-docker-scripts
-      MAKE_PUSH_TARGET: push
+      PUSH_TARGET: push
       EXTRA_TAG: ''
       DEFAULT_TAG: latest
       COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
