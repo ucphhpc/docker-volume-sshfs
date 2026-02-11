@@ -24,7 +24,9 @@ fi
 
 DOCKER_SSH_MOUNT_IMAGE="ucphhpc/ssh-mount-dummy"
 TEST_SSH_KEY_DIRECTORY=`pwd`/.gocd/ssh
-TEST_SSH_KEY_PATH=${TEST_SSH_KEY_DIRECTORY}/id_rsa
+TEST_SSH_KEY_NAME=id_rsa
+TEST_SSH_KEY_PATH="${TEST_SSH_KEY_DIRECTORY}/${TEST_SSH_KEY_NAME}"
+TEST_SSH_PUB_KEY_PATH="${TEST_SSH_KEY_PATH}.pub"
 
 MOUNT_USER=mountuser
 MOUNT_HOST=localhost
@@ -45,26 +47,16 @@ if [ ! -r ${TEST_SSH_KEY_PATH} ]; then
     ssh-keygen -t rsa -N "" -f ${TEST_SSH_KEY_PATH}
 fi
 
-# Read in the public key
-TEST_SSH_PUB_KEY_PATH="${TEST_SSH_KEY_PATH}.pub"
-TEST_SSH_AUTH_KEYS_PATH=${TEST_SSH_KEY_DIRECTORY}/authorized_keys
-cp ${TEST_SSH_PUB_KEY_PATH} ${TEST_SSH_AUTH_KEYS_PATH}
-chown 1000:1000 ${TEST_SSH_AUTH_KEYS_PATH}
-chmod 600 ${TEST_SSH_AUTH_KEYS_PATH}
-
 # make the plugin
 make TAG="${TAG}"
 # enable the plugin
 make enable TAG="${TAG}"
 
 # start sshd
-docker run -d -p ${MOUNT_PORT}:22 --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOUNT_IMAGE}
+docker run -d -p ${MOUNT_PORT}:22 -v ${TEST_SSH_PUB_KEY_PATH}:/authorized-keys/${TEST_SSH_KEY_NAME}.pub --name ${SSH_MOUNT_CONTAINER} ${DOCKER_SSH_MOUNT_IMAGE}
 # It takes a while for the container to start and be ready to accept connection
 # TODO, check when container is ready instead of sleeping
 sleep 20
-
-# Copy in the public key
-docker cp ${TEST_SSH_AUTH_KEYS_PATH} ${SSH_MOUNT_CONTAINER}:${MOUNT_PATH}/.ssh/authorized_keys
 
 echo "------------ test 1 identity_file flag ------------\n"
 
