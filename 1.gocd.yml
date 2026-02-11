@@ -30,13 +30,13 @@ pipelines:
     parameters:
       NAME: ucphhpc/sshfs
       IMAGE: docker-volume-sshfs
-      BUILD_ARGS: ''
-      TEST_ARGS: ''
+      SRC_DIRECTORY: docker-volume-sshfs
+      MAKE_BUILD_ARGS: ''
+      TEST_DIRECTORY: docker-volume-sshfs
+      MAKE_TEST_ARGS: ''
+      PUSH_DIRECTORY: publish-docker-scripts
+      MAKE_PUSH_TARGET: push
       EXTRA_TAG: ''
       DEFAULT_TAG: latest
       COMMIT_TAG: GO_REVISION_DOCKER_VOLUME_SSHFS_GIT
-      PUSH_TARGET: push
-      SRC_DIRECTORY: docker-volume-sshfs
-      TEST_DIRECTORY: docker-volume-sshfs
-      PUSH_DIRECTORY: publish-docker-scripts
     template: bare_metal_docker_plugin
