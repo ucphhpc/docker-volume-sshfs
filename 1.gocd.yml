@@ -31,8 +31,10 @@ pipelines:
       NAME: ucphhpc/sshfs
       IMAGE: docker-volume-sshfs
       SRC_DIRECTORY: docker-volume-sshfs
+      BUILD_MAKE_TARGET: 'build'
       BUILD_MAKE_ARGS: ''
       TEST_DIRECTORY: docker-volume-sshfs
+      TEST_MAKE_TARGET: 'test'
       TEST_MAKE_ARGS: ''
       PUSH_DIRECTORY: publish-docker-scripts
       PUSH_TARGET: push
